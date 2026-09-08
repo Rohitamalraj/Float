@@ -1,0 +1,45 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc_version = "0.8.26"
+evm_version = "cancun"
+via_ir = true
+optimizer = true
+optimizer_runs = 800
+bytecode_hash = "none"
+fs_permissions = [{ access = "read", path = "out" }, { access = "read-write", path = "deployments" }]
+gas_reports = ["FloatSweepExecutor", "FloatComplianceRegistry", "FloatUSTB", "FloatYieldReserve", "FloatPolicyView", "FloatAllowlistChecker"]
+
+[profile.ci]
+fuzz = { runs = 2000 }
+verbosity = 3
+
+[lint]
+severity = ["high", "med"]
+# Every flagged call site sits inside a `nonReentrant` function or is Float-internal
+# accounting against a known-good (no-callback) ERC20; the guard is the mitigation.
+exclude_lints = [
+    "reentrancy-events",
+    "reentrancy-no-eth",
+    "unsafe-typecast",
+    "internal-function-used-once",
+]
+
+[profile.lite]
+via_ir = false
+optimizer = false
+
+[fuzz]
+runs = 512
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+mainnet = "${MAINNET_RPC_URL}"
+anvil = "${ANVIL_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 11155111 }
+mainnet = { key = "${ETHERSCAN_API_KEY}", chain = 1 }
