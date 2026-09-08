@@ -10,11 +10,10 @@ out/
 *.tsbuildinfo
 coverage/
 
-# foundry
+# foundry (contracts/lib/* are git submodules — tracked, not ignored)
 contracts/out/
 contracts/cache/
 contracts/broadcast/**/dry-run/
-contracts/lib/
 
 # env / secrets
 .env

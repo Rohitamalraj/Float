@@ -13,26 +13,33 @@ jobs:
   contracts:
     name: contracts (foundry)
     runs-on: ubuntu-latest
+    env:
+      SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
     defaults:
       run:
         working-directory: contracts
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: v1.8.1
-      - name: Install contract dependencies
-        run: forge install
       - name: Build
         run: forge build --sizes
       - name: Lint
         run: forge lint
       - name: Format check
         run: forge fmt --check
-      - name: Test
-        run: forge test -vvv
+      - name: Test (unit)
+        run: forge test -vvv --no-match-path 'test/fork/**'
         env:
           FOUNDRY_PROFILE: ci
+      - name: Test (fork — Sepolia)
+        if: ${{ env.SEPOLIA_RPC_URL != '' }}
+        run: forge test -vv --match-path 'test/fork/**'
+        env:
+          FORK_TESTS: 1
 
   packages:
     name: packages (node)

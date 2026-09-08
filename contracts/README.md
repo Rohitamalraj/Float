@@ -18,11 +18,24 @@ these fit the whole system.
 
 ## Develop
 
+Dependencies are git submodules (`lib/forge-std`, `lib/v4-periphery` pinned to
+`main` @ `dce236d4` — the commit the live Sepolia Permissioned Pools were built
+from). After `git clone`:
+
 ```bash
-forge install        # restore deps from foundry.lock (forge-std, v4-periphery @3245c3cb)
+git submodule update --init --recursive   # or: forge install
 forge build
-forge test
+forge test                                # unit tests
 forge lint && forge fmt --check
+```
+
+### Fork tests
+
+`test/fork/**` exercise the full sweep round-trip against the **live Sepolia**
+Uniswap v4 Permissioned Pool contracts. They are skipped unless opted in:
+
+```bash
+FORK_TESTS=1 SEPOLIA_RPC_URL=<url> forge test --match-path 'test/fork/**' -vv
 ```
 
 ## Deploy (Sepolia)
