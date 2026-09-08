@@ -52,9 +52,8 @@ contract DeployCore is Config {
         // Reserve is owned by the deployer for setVault + initial funding, then
         // ownership is handed to the Float admin.
         FloatYieldReserve reserve = new FloatYieldReserve(IERC20(usdc), deployer);
-        FloatUSTB ustb = new FloatUSTB(
-            IERC20(usdc), IFloatYieldReserve(address(reserve)), treasury, admin, grossBps, spreadBps
-        );
+        FloatUSTB ustb =
+            new FloatUSTB(IERC20(usdc), IFloatYieldReserve(address(reserve)), treasury, admin, grossBps, spreadBps);
         reserve.setVault(address(ustb));
         reserve.transferOwnership(admin); // Ownable2Step: admin must accept
 

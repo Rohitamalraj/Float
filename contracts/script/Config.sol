@@ -58,7 +58,6 @@ abstract contract Config is Script {
     }
 
     function _deploymentsPath(string memory section) internal view returns (string memory) {
-        return
-            string.concat("deployments/", vm.toString(block.chainid), ".", section, ".json");
+        return string.concat("deployments/", vm.toString(block.chainid), ".", section, ".json");
     }
 }

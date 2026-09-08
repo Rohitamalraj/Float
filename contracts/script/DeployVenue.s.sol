@@ -8,12 +8,13 @@ import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {IPermissionsAdapterFactory} from
-    "@uniswap/v4-periphery/src/hooks/permissionedPools/interfaces/IPermissionsAdapterFactory.sol";
-import {IPermissionsAdapter} from
-    "@uniswap/v4-periphery/src/hooks/permissionedPools/interfaces/IPermissionsAdapter.sol";
-import {IAllowlistChecker} from
-    "@uniswap/v4-periphery/src/hooks/permissionedPools/interfaces/IAllowlistChecker.sol";
+import {
+    IPermissionsAdapterFactory
+} from "@uniswap/v4-periphery/src/hooks/permissionedPools/interfaces/IPermissionsAdapterFactory.sol";
+import {
+    IPermissionsAdapter
+} from "@uniswap/v4-periphery/src/hooks/permissionedPools/interfaces/IPermissionsAdapter.sol";
+import {IAllowlistChecker} from "@uniswap/v4-periphery/src/hooks/permissionedPools/interfaces/IAllowlistChecker.sol";
 
 import {Config} from "./Config.sol";
 import {FloatUSTB} from "@float/FloatUSTB.sol";
@@ -65,9 +66,8 @@ contract DeployVenue is Config {
 
         address adapter = _envOrAddr("FLOAT_PERMISSIONS_ADAPTER_ADDRESS", address(0));
         if (adapter == address(0)) {
-            adapter = IPermissionsAdapterFactory(u.permissionsAdapterFactory).createPermissionsAdapter(
-                IERC20(floatUstb), deployer, IAllowlistChecker(checker)
-            );
+            adapter = IPermissionsAdapterFactory(u.permissionsAdapterFactory)
+                .createPermissionsAdapter(IERC20(floatUstb), deployer, IAllowlistChecker(checker));
             _seedAndVerify(u, floatUstb, adapter, usdc, deployer);
         }
 
@@ -94,9 +94,10 @@ contract DeployVenue is Config {
 
         // The executor must itself be an allowlisted swapper for the pool hook.
         vm.startBroadcast(vm.envUint("COMPLIANCE_ORACLE_PRIVATE_KEY"));
-        FloatComplianceRegistry(registry).setAttestation(
-            address(executor), IFloatComplianceRegistry.KycStatus.Verified, false, 0, bytes32("float-executor")
-        );
+        FloatComplianceRegistry(registry)
+            .setAttestation(
+                address(executor), IFloatComplianceRegistry.KycStatus.Verified, false, 0, bytes32("float-executor")
+            );
         vm.stopBroadcast();
 
         v = VenueDeployment({
@@ -112,13 +113,9 @@ contract DeployVenue is Config {
         _log(v);
     }
 
-    function _seedAndVerify(
-        UniswapAddrs memory,
-        address floatUstb,
-        address adapter,
-        address usdc,
-        address deployer
-    ) internal {
+    function _seedAndVerify(UniswapAddrs memory, address floatUstb, address adapter, address usdc, address deployer)
+        internal
+    {
         uint256 seed = vm.envOr("FLOAT_VERIFICATION_USDC", uint256(1e6));
         IERC20(usdc).approve(floatUstb, seed);
         uint256 shares = FloatUSTB(floatUstb).deposit(seed, deployer);
@@ -133,16 +130,12 @@ contract DeployVenue is Config {
         a.updateAllowedWrapper(u.universalRouter, true);
         a.updateAllowedWrapper(u.v4Quoter, true);
         a.updateAllowedWrapper(u.mixedRouteQuoterV2, true);
+        a.updateAllowedHook(IHooks(u.permissionedHooks), true);
         a.updateSwappingEnabled(true);
     }
 
-    function _poolKey(address usdc, address adapter, address hooks)
-        internal
-        view
-        returns (PoolKey memory)
-    {
-        (address c0, address c1) =
-            uint160(usdc) < uint160(adapter) ? (usdc, adapter) : (adapter, usdc);
+    function _poolKey(address usdc, address adapter, address hooks) internal view returns (PoolKey memory) {
+        (address c0, address c1) = uint160(usdc) < uint160(adapter) ? (usdc, adapter) : (adapter, usdc);
         return PoolKey({
             currency0: Currency.wrap(c0),
             currency1: Currency.wrap(c1),
@@ -155,9 +148,7 @@ contract DeployVenue is Config {
     /// @dev Initial price for a ~1.00 share price: 1e6 USDC ≈ 1e9 fUSTB units
     ///      (6-decimal asset + 3-decimal offset). Idempotent — a re-run whose
     ///      pool already exists is tolerated.
-    function _initializePool(address poolManager, PoolKey memory key, address usdc, address adapter)
-        internal
-    {
+    function _initializePool(address poolManager, PoolKey memory key, address usdc, address adapter) internal {
         bool usdcIsC0 = uint160(usdc) < uint160(adapter);
         // price = amount(currency1) / amount(currency0)
         (uint256 amt1, uint256 amt0) = usdcIsC0 ? (uint256(1e9), uint256(1e6)) : (uint256(1e6), uint256(1e9));

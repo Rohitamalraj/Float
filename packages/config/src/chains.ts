@@ -4,19 +4,20 @@ export type ChainKey = 'mainnet' | 'sepolia' | 'anvil';
 
 /**
  * Uniswap v4 Permissioned Pools deployment.
- * Source: developers.uniswap.org — v4-periphery pinned commit
- * 3245c3cb99c48fa1dc2459c3b60abc37d4294aba.
+ * Contracts match v4-periphery `main` @ dce236d4e2057422d0791d9a973a58765eb46f65
+ * (the commit the live Sepolia deployment was built from — verified via a
+ * fork round-trip in `contracts/test/fork/`).
  */
 export interface UniswapPermissionedAddresses {
   permissionsAdapterFactory: Address;
   permissionedPositionManager: Address;
   permissionedHooks: Address;
-  /** Permissioned Universal Router (2.2.0+) — all permissioned swaps route here. */
+  /** Permissioned Universal Router — all permissioned swaps route here. */
   universalRouter: Address;
   v4Quoter: Address;
   mixedRouteQuoterV2: Address;
   permit2: Address;
-  /** Canonical v4 PoolManager — TODO verify per chain; not needed for the routed swap path. */
+  /** Canonical v4 PoolManager (from `factory.POOL_MANAGER()`). */
   poolManager?: Address;
 }
 
@@ -87,6 +88,7 @@ const SEPOLIA: ChainConfig = {
     v4Quoter: '0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227',
     mixedRouteQuoterV2: '0x4745F77b56a0E2294426E3936dc4Fab68d9543Cd',
     permit2: PERMIT2,
+    poolManager: '0xE03A1074c86CFeDd5C142C4F04F1a1536e203543',
   },
   ens: {
     // ⚠ UNVERIFIED — confirm against https://docs.ens.domains/learn/deployments
