@@ -1,0 +1,46 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+coverage/
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/**/dry-run/
+contracts/lib/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+logs/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# turbo
+.turbo/
+
+# misc
+tmp/
+.cache/
