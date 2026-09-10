@@ -96,5 +96,22 @@ Hono service; revenue line 2 + the Bazantic prize integration.
   `X402_ENABLED` / `X402_MODE` / `X402_NETWORK` and the UniversalResolverV2 Sepolia address.
 - Dockerfile + README. 5 tests (price conversion, challenge/permissive/disabled paths).
 
-## ⬜ Phase 5 — web (dashboard + admin + API)
+## ✅ Phase 5 — `@float/web`
+Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
+- **SIWE auth** — `viem/siwe` (nonce cookie → `verifySiweMessage`), `jose`-signed httpOnly
+  session cookie, `requireUser` / `requireAdmin` (`ADMIN_ALLOWLIST`).
+- **`/login`** — connect wallet → sign-in (no gas).
+- **`/onboarding`** — 4-step wizard (name → disclosures → accreditation → KYC submit); creates
+  `businesses` + `compliance` + `kyc_reviews`.
+- **`/dashboard`** — buffer, parked value, yield + Float spread, compliance + session-key status,
+  recent sweeps.
+- **`/settings`** — buffer edit (server returns owner-signable ENS `setText` calldata → sent via
+  wagmi), obligations CRUD, session-key revoke (immediate DB cut-off).
+- **`/admin`** — KYC review queue (approve → agent-service oracle-sync writes the attestation),
+  all businesses, gateway-call count.
+- API: `/api/auth/*`, `/api/business/*` (`PATCH /policy` returns calldata, never signs
+  server-side), `/api/admin/*`.
+- `@float/db`: `businesses.ens_resolver` used by the buffer flow. `@float/config`:
+  `NEXT_PUBLIC_ENS_PARENT`. 5 tests (format helpers); `next build` clean (19 routes).
+
 ## ⬜ Phase 6 — hardening
