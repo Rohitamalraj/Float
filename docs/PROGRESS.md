@@ -36,9 +36,19 @@ Tracks the phased plan in `~/.claude/plans/zazzy-inventing-volcano.md`.
 ### Phase 1 remaining (deferred, non-blocking)
 - [ ] `SeedLiquidity.s.sol` — a standalone script for real Sepolia pool liquidity (the fork test
       already proves the mint path via `PermissionedPositionManager.modifyLiquidities`).
-- [ ] Verify ENS v2 Sepolia addresses (Phase 2, in `@float/ens`).
 
-## ⬜ Phase 2 — Core packages (`db`, `contracts-sdk`, `ens`, `wallet`, `uniswap`)
+## 🚧 Phase 2 — Core packages
+- ✅ `@float/db` — 15-table Drizzle schema + client + migration + docker-compose. 10 tests.
+- ✅ `@float/contracts-sdk` — ABIs (generated from the Foundry build; CI checks freshness), typed
+  `getContract` clients, `resolveFloatDeployment` from env, `readAttestation`/`readAccountPolicy`/
+  `readVaultValuation`, and the agent `encodeSweepIn/Out` batch + oracle/policy encoders. 7 tests.
+- ✅ `@float/ens` — verified ENS v2 Sepolia addresses; VerifiableFactory CREATE2 predictor;
+  resolver record read/write; `encodeAuthorizeRecordRoleSplit` (owner ↔ oracle text-key split,
+  Float-admin'd so neither can revoke the other); `planBusinessProvisioning()` step plan. 19 tests.
+- ⬜ `@float/wallet` — ZeroDev Kernel account deploy + session-key grant/serialize/deserialize/revoke
+  with the Layer 1 `toCallPolicy`.
+- ⬜ `@float/uniswap` — off-chain Universal Router calldata + V4Quoter `minOut`.
+
 ## ⬜ Phase 3 — agent-service
 ## ⬜ Phase 4 — gateway
 ## ⬜ Phase 5 — web (dashboard + admin + API)
