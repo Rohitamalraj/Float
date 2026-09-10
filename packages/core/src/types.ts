@@ -67,6 +67,8 @@ export interface SweepDecision {
 }
 
 export interface SweepDecisionDetail {
+  /** All values are primitives so the object is JSON- and jsonb-safe. */
+  [key: string]: string | number | boolean;
   balance: string;
   buffer: string;
   reservedForObligations: string;

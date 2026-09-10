@@ -56,7 +56,30 @@ Tracks the phased plan in `~/.claude/plans/zazzy-inventing-volcano.md`.
 
 viem bumped to `^2.37.6` workspace-wide (ZeroDev peer). `KERNEL_VERSION` added to the env schema.
 
-## ⬜ Phase 3 — agent-service
-## ⬜ Phase 4 — gateway
+## ✅ Phase 3 — `@float/agent-service`
+The always-on multi-tenant service. BullMQ (Redis) + Postgres (`@float/db`).
+- **balance-watcher** — viem `watchEvent` on USDC `Transfer` to every managed smart account →
+  enqueues `evaluate`; refreshes the managed set every 60s; slow full re-evaluation tick as a
+  safety net.
+- **evaluate worker** — `buildSweepContext` (on-chain attestation + balances + vault valuation,
+  ENS policy records with a DB-mirror fallback, obligations) → `@float/core` `evaluateSweep` →
+  enqueues an idempotent `execute` (`<businessId>:<direction>:<hour>` job id).
+- **execute worker** — quote `minOut` (`@float/uniswap`), build the `[approve, sweep]` batch
+  (`@float/contracts-sdk`), `restoreSessionKeyClient` (`@float/wallet`), `sendUserOperation` →
+  wait receipt → write `sweeps` / `onchain_tx` / `audit_log`. Concurrency-capped, retry/backoff.
+- **oracle-sync worker** — drains admin-approved `kyc_reviews` (the `ManualAdminAdapter` issuer
+  stand-in) → `FloatComplianceRegistry.setAttestation` + ENS `float.kyc-*` mirror, both
+  compliance-oracle-signed.
+- **policy-sync worker** — keeps `FloatPolicyView` equal to each business's ENS policy records
+  (`POLICY_SYNC_ROLE`).
+- `Signer` abstraction (env keys now, KMS seam), pino logging, `/health` + `/ready`, graceful
+  shutdown. Dockerfile + README. 6 tests (idempotency key, connection mapping, context mappers);
+  the network path needs a live bundler + DB + Redis.
+
+Schema: added `businesses.ens_resolver`, `onchain_tx_kind` gains `sweep`. Env: `POLICY_SYNC_*`,
+`EVALUATE_INTERVAL_MS`, `SWEEP_SLIPPAGE_BPS`, `MIN_SWEEP_USDC`, `MAX_COMPLIANCE_AGE_HOURS`,
+`EXECUTE_CONCURRENCY`. `SweepDecisionDetail` given an index signature (jsonb-safe).
+
+## ⬜ Phase 4 — gateway (Bazantic x402 `/v1/check`)
 ## ⬜ Phase 5 — web (dashboard + admin + API)
 ## ⬜ Phase 6 — hardening

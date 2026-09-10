@@ -1,5 +1,5 @@
 {
-  "id": "8c1ebf0c-171e-4210-96a1-d097933277b3",
+  "id": "0b68b022-d50a-4285-89a2-373929d5719c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -148,8 +148,12 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -249,8 +253,12 @@
           "name": "users_org_id_organizations_id_fk",
           "tableFrom": "users",
           "tableTo": "organizations",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -287,6 +295,12 @@
         "ens_node": {
           "name": "ens_node",
           "type": "varchar(66)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ens_resolver": {
+          "name": "ens_resolver",
+          "type": "varchar(42)",
           "primaryKey": false,
           "notNull": false
         },
@@ -410,8 +424,12 @@
           "name": "businesses_org_id_organizations_id_fk",
           "tableFrom": "businesses",
           "tableTo": "organizations",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "org_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -489,8 +507,12 @@
           "name": "policies_business_id_businesses_id_fk",
           "tableFrom": "policies",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -627,8 +649,12 @@
           "name": "session_keys_business_id_businesses_id_fk",
           "tableFrom": "session_keys",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -730,8 +756,12 @@
           "name": "compliance_business_id_businesses_id_fk",
           "tableFrom": "compliance",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -857,8 +887,12 @@
           "name": "kyc_reviews_business_id_businesses_id_fk",
           "tableFrom": "kyc_reviews",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -866,8 +900,12 @@
           "name": "kyc_reviews_reviewed_by_users_id_fk",
           "tableFrom": "kyc_reviews",
           "tableTo": "users",
-          "columnsFrom": ["reviewed_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reviewed_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -993,8 +1031,12 @@
           "name": "obligations_business_id_businesses_id_fk",
           "tableFrom": "obligations",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1002,8 +1044,12 @@
           "name": "obligations_created_by_users_id_fk",
           "tableFrom": "obligations",
           "tableTo": "users",
-          "columnsFrom": ["created_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1086,8 +1132,12 @@
           "name": "positions_business_id_businesses_id_fk",
           "tableFrom": "positions",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1269,8 +1319,12 @@
           "name": "sweeps_business_id_businesses_id_fk",
           "tableFrom": "sweeps",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1386,8 +1440,12 @@
           "name": "audit_log_business_id_businesses_id_fk",
           "tableFrom": "audit_log",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1658,8 +1716,12 @@
           "name": "onchain_tx_business_id_businesses_id_fk",
           "tableFrom": "onchain_tx",
           "tableTo": "businesses",
-          "columnsFrom": ["business_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1707,47 +1769,84 @@
     "public.accreditation": {
       "name": "accreditation",
       "schema": "public",
-      "values": ["accredited", "non_accredited", "unknown"]
+      "values": [
+        "accredited",
+        "non_accredited",
+        "unknown"
+      ]
     },
     "public.audit_actor_type": {
       "name": "audit_actor_type",
       "schema": "public",
-      "values": ["user", "agent", "oracle", "system"]
+      "values": [
+        "user",
+        "agent",
+        "oracle",
+        "system"
+      ]
     },
     "public.business_status": {
       "name": "business_status",
       "schema": "public",
-      "values": ["onboarding", "active", "suspended", "closed"]
+      "values": [
+        "onboarding",
+        "active",
+        "suspended",
+        "closed"
+      ]
     },
     "public.compliance_source": {
       "name": "compliance_source",
       "schema": "public",
-      "values": ["manual_admin", "issuer_webhook"]
+      "values": [
+        "manual_admin",
+        "issuer_webhook"
+      ]
     },
     "public.kyc_review_status": {
       "name": "kyc_review_status",
       "schema": "public",
-      "values": ["pending", "approved", "rejected"]
+      "values": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
     },
     "public.kyc_status": {
       "name": "kyc_status",
       "schema": "public",
-      "values": ["none", "pending", "verified", "revoked", "expired"]
+      "values": [
+        "none",
+        "pending",
+        "verified",
+        "revoked",
+        "expired"
+      ]
     },
     "public.obligation_recurrence": {
       "name": "obligation_recurrence",
       "schema": "public",
-      "values": ["none", "weekly", "monthly"]
+      "values": [
+        "none",
+        "weekly",
+        "monthly"
+      ]
     },
     "public.obligation_status": {
       "name": "obligation_status",
       "schema": "public",
-      "values": ["scheduled", "covered", "paid", "cancelled"]
+      "values": [
+        "scheduled",
+        "covered",
+        "paid",
+        "cancelled"
+      ]
     },
     "public.onchain_tx_kind": {
       "name": "onchain_tx_kind",
       "schema": "public",
       "values": [
+        "sweep",
         "oracle_attestation",
         "ens_policy_write",
         "ens_compliance_write",
@@ -1762,32 +1861,60 @@
     "public.onchain_tx_status": {
       "name": "onchain_tx_status",
       "schema": "public",
-      "values": ["pending", "confirmed", "failed"]
+      "values": [
+        "pending",
+        "confirmed",
+        "failed"
+      ]
     },
     "public.session_key_status": {
       "name": "session_key_status",
       "schema": "public",
-      "values": ["pending", "active", "revoked", "expired"]
+      "values": [
+        "pending",
+        "active",
+        "revoked",
+        "expired"
+      ]
     },
     "public.signer_role": {
       "name": "signer_role",
       "schema": "public",
-      "values": ["deployer", "oracle", "policy_sync", "provisioner", "agent_session"]
+      "values": [
+        "deployer",
+        "oracle",
+        "policy_sync",
+        "provisioner",
+        "agent_session"
+      ]
     },
     "public.sweep_direction": {
       "name": "sweep_direction",
       "schema": "public",
-      "values": ["in", "out"]
+      "values": [
+        "in",
+        "out"
+      ]
     },
     "public.sweep_status": {
       "name": "sweep_status",
       "schema": "public",
-      "values": ["pending", "submitted", "confirmed", "failed"]
+      "values": [
+        "pending",
+        "submitted",
+        "confirmed",
+        "failed"
+      ]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": ["owner", "admin", "member", "float_staff"]
+      "values": [
+        "owner",
+        "admin",
+        "member",
+        "float_staff"
+      ]
     }
   },
   "schemas": {},

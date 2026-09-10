@@ -62,6 +62,7 @@ const EnvSchema = z.object({
   // keys
   DEPLOYER_PRIVATE_KEY: hexKey,
   COMPLIANCE_ORACLE_PRIVATE_KEY: hexKey,
+  POLICY_SYNC_PRIVATE_KEY: hexKey,
   ENS_PROVISIONER_PRIVATE_KEY: hexKey,
   AGENT_SESSION_SIGNER_PRIVATE_KEY: hexKey,
 
@@ -129,6 +130,15 @@ const EnvSchema = z.object({
   AGENT_SERVICE_PORT: z.coerce.number().int().positive().default(8080),
   SWEEP_OUT_LOOKAHEAD_HOURS: z.coerce.number().positive().default(48),
   WATCHER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(15000),
+  /** Re-evaluate every managed business on this cadence (safety net for missed events). */
+  EVALUATE_INTERVAL_MS: z.coerce.number().int().positive().default(300000),
+  /** Slippage bound applied to quotes when building a sweep, basis points. */
+  SWEEP_SLIPPAGE_BPS: z.coerce.number().int().nonnegative().default(50),
+  /** Skip sweeps smaller than this, USDC (decimal string). */
+  MIN_SWEEP_USDC: z.string().default('25'),
+  /** Refuse to trade on a compliance attestation older than this many hours. */
+  MAX_COMPLIANCE_AGE_HOURS: z.coerce.number().positive().default(720),
+  EXECUTE_CONCURRENCY: z.coerce.number().int().positive().default(4),
 });
 
 export type FloatEnv = z.infer<typeof EnvSchema>;

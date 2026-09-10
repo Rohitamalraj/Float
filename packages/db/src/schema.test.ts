@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getTableConfig } from 'drizzle-orm/pg-core';
@@ -89,7 +89,11 @@ describe('schema — enums', () => {
 describe('schema — generated DDL', () => {
   const migration = (() => {
     const dir = resolve(dirname(fileURLToPath(import.meta.url)), '../migrations');
-    return readFileSync(resolve(dir, '0000_funny_joseph.sql'), 'utf8');
+    const first = readdirSync(dir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort()[0];
+    if (!first) throw new Error('no migration generated — run `pnpm --filter @float/db generate`');
+    return readFileSync(resolve(dir, first), 'utf8');
   })();
 
   it('emits snake_case columns to Postgres', () => {

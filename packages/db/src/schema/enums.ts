@@ -44,6 +44,7 @@ export const sweepDirection = pgEnum('sweep_direction', ['in', 'out']);
 export const sweepStatus = pgEnum('sweep_status', ['pending', 'submitted', 'confirmed', 'failed']);
 
 export const onchainTxKind = pgEnum('onchain_tx_kind', [
+  'sweep',
   'oracle_attestation',
   'ens_policy_write',
   'ens_compliance_write',

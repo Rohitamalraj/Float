@@ -37,6 +37,8 @@ export const businesses = pgTable(
     ensName: text().notNull(),
     /** namehash of `ensName`, `0x`-prefixed. */
     ensNode: hash32(),
+    /** The Float-controlled PermissionedResolver proxy for `ensName`. */
+    ensResolver: evmAddress(),
     smartAccountAddress: evmAddress(),
     ownerKeyAddress: evmAddress().notNull(),
     chainId: integer().notNull(),

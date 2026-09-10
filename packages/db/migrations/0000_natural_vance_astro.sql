@@ -6,7 +6,7 @@ CREATE TYPE "public"."kyc_review_status" AS ENUM('pending', 'approved', 'rejecte
 CREATE TYPE "public"."kyc_status" AS ENUM('none', 'pending', 'verified', 'revoked', 'expired');--> statement-breakpoint
 CREATE TYPE "public"."obligation_recurrence" AS ENUM('none', 'weekly', 'monthly');--> statement-breakpoint
 CREATE TYPE "public"."obligation_status" AS ENUM('scheduled', 'covered', 'paid', 'cancelled');--> statement-breakpoint
-CREATE TYPE "public"."onchain_tx_kind" AS ENUM('oracle_attestation', 'ens_policy_write', 'ens_compliance_write', 'policy_view_sync', 'session_key_grant', 'session_key_revoke', 'fee_collection', 'account_deploy', 'subname_provision');--> statement-breakpoint
+CREATE TYPE "public"."onchain_tx_kind" AS ENUM('sweep', 'oracle_attestation', 'ens_policy_write', 'ens_compliance_write', 'policy_view_sync', 'session_key_grant', 'session_key_revoke', 'fee_collection', 'account_deploy', 'subname_provision');--> statement-breakpoint
 CREATE TYPE "public"."onchain_tx_status" AS ENUM('pending', 'confirmed', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."session_key_status" AS ENUM('pending', 'active', 'revoked', 'expired');--> statement-breakpoint
 CREATE TYPE "public"."signer_role" AS ENUM('deployer', 'oracle', 'policy_sync', 'provisioner', 'agent_session');--> statement-breakpoint
@@ -48,6 +48,7 @@ CREATE TABLE "businesses" (
 	"org_id" uuid NOT NULL,
 	"ens_name" text NOT NULL,
 	"ens_node" varchar(66),
+	"ens_resolver" varchar(42),
 	"smart_account_address" varchar(42),
 	"owner_key_address" varchar(42) NOT NULL,
 	"chain_id" integer NOT NULL,
