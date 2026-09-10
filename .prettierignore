@@ -9,3 +9,8 @@ contracts/out
 contracts/cache
 pnpm-lock.yaml
 *.md
+
+# generated
+packages/contracts-sdk/src/abis/_generated.ts
+packages/contracts-sdk/src/abis/float*.ts
+packages/db/migrations
