@@ -1,5 +1,5 @@
 {
-  "name": "@float/contracts-sdk",
+  "name": "@float/uniswap",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,17 +9,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./abis": {
-      "types": "./dist/abis/index.d.ts",
-      "default": "./dist/abis/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "gen": "node scripts/gen-abis.mjs",
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -29,6 +24,7 @@
   },
   "dependencies": {
     "@float/config": "workspace:*",
+    "@float/contracts-sdk": "workspace:*",
     "viem": "^2.37.6"
   },
   "devDependencies": {

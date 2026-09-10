@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@float/config": "workspace:*",
-    "viem": "^2.22.7"
+    "viem": "^2.37.6"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

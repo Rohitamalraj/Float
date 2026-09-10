@@ -92,6 +92,8 @@ const EnvSchema = z.object({
   ZERODEV_PROJECT_ID: z.string().optional(),
   ZERODEV_BUNDLER_RPC: url,
   ZERODEV_PAYMASTER_RPC: url,
+  /** Kernel account version. EntryPoint is fixed at v0.7. */
+  KERNEL_VERSION: z.enum(['0.3.1', '0.3.2', '0.3.3']).default('0.3.3'),
   ENTRYPOINT_ADDRESS: z
     .string()
     .regex(/^0x[0-9a-fA-F]{40}$/)

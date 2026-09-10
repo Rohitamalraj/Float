@@ -37,17 +37,24 @@ Tracks the phased plan in `~/.claude/plans/zazzy-inventing-volcano.md`.
 - [ ] `SeedLiquidity.s.sol` — a standalone script for real Sepolia pool liquidity (the fork test
       already proves the mint path via `PermissionedPositionManager.modifyLiquidities`).
 
-## 🚧 Phase 2 — Core packages
-- ✅ `@float/db` — 15-table Drizzle schema + client + migration + docker-compose. 10 tests.
-- ✅ `@float/contracts-sdk` — ABIs (generated from the Foundry build; CI checks freshness), typed
+## ✅ Phase 2 — Core packages
+- `@float/db` — 15-table Drizzle schema + client + migration + docker-compose. 10 tests.
+- `@float/contracts-sdk` — ABIs (generated from the Foundry build; CI checks freshness), typed
   `getContract` clients, `resolveFloatDeployment` from env, `readAttestation`/`readAccountPolicy`/
   `readVaultValuation`, and the agent `encodeSweepIn/Out` batch + oracle/policy encoders. 7 tests.
-- ✅ `@float/ens` — verified ENS v2 Sepolia addresses; VerifiableFactory CREATE2 predictor;
-  resolver record read/write; `encodeAuthorizeRecordRoleSplit` (owner ↔ oracle text-key split,
-  Float-admin'd so neither can revoke the other); `planBusinessProvisioning()` step plan. 19 tests.
-- ⬜ `@float/wallet` — ZeroDev Kernel account deploy + session-key grant/serialize/deserialize/revoke
-  with the Layer 1 `toCallPolicy`.
-- ⬜ `@float/uniswap` — off-chain Universal Router calldata + V4Quoter `minOut`.
+- `@float/ens` — verified ENS v2 Sepolia addresses; VerifiableFactory CREATE2 predictor; resolver
+  record read/write; `encodeAuthorizeRecordRoleSplit` (owner ↔ oracle text-key split, Float-admin'd
+  so neither can revoke the other); `planBusinessProvisioning()` step plan. 19 tests.
+- `@float/wallet` — ZeroDev Kernel v3 (EP 0.7). `agentPermissionSpec` / `buildAgentCallPolicy`
+  (the Layer 1 `toCallPolicy` V0.0.4: 4 permissions — sweepIn arg0 ≤ cap, sweepOut, USDC.approve
+  spender==executor & amount ≤ cap, FloatUSTB.approve spender==executor). `grantAgentSessionKey`
+  (owner serialises), `restoreSessionKeyClient` (agent deserialises), `revokeAgentSessionKey`
+  (owner uninstalls), `getBusinessAccount` / `businessKernelClient`. 8 tests (policy shape; the
+  network fns need a live bundler).
+- `@float/uniswap` — `resolveFloatVenue` + `buildFloatPoolKey` (currency sort) + `zeroForOneFor`;
+  `quoteSweep` / `quoteSweepMinOut` via the Sepolia V4Quoter lens; `applySlippage`. 5 tests.
+
+viem bumped to `^2.37.6` workspace-wide (ZeroDev peer). `KERNEL_VERSION` added to the env schema.
 
 ## ⬜ Phase 3 — agent-service
 ## ⬜ Phase 4 — gateway
