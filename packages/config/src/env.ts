@@ -102,6 +102,13 @@ const EnvSchema = z.object({
 
   // gateway
   GATEWAY_PORT: z.coerce.number().int().positive().default(8402),
+  X402_ENABLED: z
+    .string()
+    .default('true')
+    .transform((s) => s !== 'false' && s !== '0'),
+  /** enforce = reject unpaid calls; permissive = log + allow (dev / behind a hosted gateway). */
+  X402_MODE: z.enum(['enforce', 'permissive']).default('enforce'),
+  X402_NETWORK: z.string().default('base-sepolia'),
   X402_RECEIVING_ADDRESS: address,
   X402_PRICE_USDC: z.coerce.number().positive().default(0.01),
   X402_FACILITATOR_URL: z.string().url().default('https://x402.org/facilitator'),

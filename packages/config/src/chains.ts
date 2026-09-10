@@ -41,6 +41,8 @@ export interface EnsV2Addresses {
   resolverProxyLogic?: Address;
   /** UserRegistry implementation (deployed per parent name to hold subnames). */
   subregistryImplementation?: Address;
+  /** UniversalResolverV2 — `findResolver(dnsName)` for on-chain name resolution. */
+  universalResolver?: Address;
 }
 
 export interface ChainConfig {
@@ -103,6 +105,7 @@ const SEPOLIA: ChainConfig = {
     resolverImplementation: '0x9EAe5C2730a7dD16BDD1DeE6421a1B91e3B0365e',
     resolverProxyLogic: '0xA136BeE4E37B44586242e516a39893EfD54315e9',
     subregistryImplementation: '0x624a25d67B59D587752EbEc8DdeD8827dAe52050',
+    universalResolver: '0x4a1817d13e9cf196f471725176355c1234b63c70',
   },
 };
 

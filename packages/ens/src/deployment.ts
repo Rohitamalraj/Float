@@ -12,6 +12,8 @@ export interface EnsDeployment {
   resolverImplementation: Address;
   resolverProxyLogic: Address;
   subregistryImplementation: Address;
+  /** Optional — present on Sepolia; used for on-chain name resolution. */
+  universalResolver?: Address;
 }
 
 export class EnsNotDeployedError extends Error {
@@ -45,5 +47,6 @@ export function resolveEnsDeployment(chainKey: ChainKey = activeChainKey()): Ens
     resolverImplementation: getAddress(e.resolverImplementation),
     resolverProxyLogic: getAddress(e.resolverProxyLogic),
     subregistryImplementation: getAddress(e.subregistryImplementation),
+    universalResolver: e.universalResolver ? getAddress(e.universalResolver) : undefined,
   };
 }

@@ -80,6 +80,21 @@ Schema: added `businesses.ens_resolver`, `onchain_tx_kind` gains `sweep`. Env: `
 `EVALUATE_INTERVAL_MS`, `SWEEP_SLIPPAGE_BPS`, `MIN_SWEEP_USDC`, `MAX_COMPLIANCE_AGE_HOURS`,
 `EXECUTE_CONCURRENCY`. `SweepDecisionDetail` given an index signature (jsonb-safe).
 
-## ⬜ Phase 4 — gateway (Bazantic x402 `/v1/check`)
+## ✅ Phase 4 — `@float/gateway` (Bazantic x402)
+Hono service; revenue line 2 + the Bazantic prize integration.
+- **`POST /v1/check`** (x402-metered, default 0.01 USDC) — `{ ensName, requestedAction?, amount? }`
+  → resolves the name (Float DB first, `UniversalResolverV2` fallback), reads the on-chain
+  attestation + ENS policy records, and either delegates to `@float/core` `evaluateSweep` (no
+  `requestedAction`) or validates a specific proposed sweep against the buffer + obligations +
+  per-tx cap. Returns `{ allowed, action, recommendedAmount, reason, compliance, policy }`.
+- **`GET /v1/policy/:ensName`** (free) — policy + compliance summary.
+- **`src/x402.ts`** — spec-compliant middleware: `402` + `PaymentRequirements`, `X-PAYMENT`
+  verify + settle against a facilitator, `X-PAYMENT-RESPONSE`. Modes: `enforce` / `permissive`
+  / disabled. Every call → one `gateway_calls` row (caller, amount, x402 tx, allowed, latency).
+- `docs/recipe.bazantic.json` — the Recipe chaining resolve → `/v1/check` → permissioned swap.
+- `@float/ens` gained `resolveFloatName` (UniversalResolverV2); `@float/config` gained
+  `X402_ENABLED` / `X402_MODE` / `X402_NETWORK` and the UniversalResolverV2 Sepolia address.
+- Dockerfile + README. 5 tests (price conversion, challenge/permissive/disabled paths).
+
 ## ⬜ Phase 5 — web (dashboard + admin + API)
 ## ⬜ Phase 6 — hardening
