@@ -18,8 +18,9 @@ The business owns an ERC-4337 (ZeroDev Kernel v3) smart account. Two validators:
   | Target | Selector | Constraints |
   |---|---|---|
   | `FloatSweepExecutor` | `sweepIn(uint256,uint256)` | `value == 0`, `args[0] ≤ maxSweepPerTx` |
-  | `FloatSweepExecutor` | `sweepOut(uint256,uint256)` | `value == 0`, `args[0] ≤ maxSweepPerTx` |
-  | `USDC` | `approve(address,uint256)` | `args[0] == FloatSweepExecutor`, `args[1] ≤ maxSweepPerTx` |
+  | `FloatSweepExecutor` | `sweepOut(uint256,uint256)` | `value == 0` (amount is in share units — bounded on chain by the executor via `FloatPolicyView`) |
+  | `USDC` | `approve(address,uint256)` | `value == 0`, `args[0] == FloatSweepExecutor`, `args[1] ≤ maxSweepPerTx` |
+  | `FloatUSTB` | `approve(address,uint256)` | `value == 0`, `args[0] == FloatSweepExecutor` (amount unbounded — the executor is the only spender and is itself cap-gated) |
 
   Nothing else is signable. `maxSweepPerTx` is a constant baked into the grant at
   signing time. Changing any of this requires a **new grant transaction signed by
@@ -44,6 +45,24 @@ chain, every sweep:
    policy cap. For `sweepOut` the cap is applied to the USDC-equivalent value.
 3. The swap runs through the **Permissioned Pool hook**, which calls
    `FloatAllowlistChecker.checkAllowlist(msgSender)` → `isVerified(executor)`.
+
+### Verifying Layer 1
+
+Two mechanisms keep this honest:
+
+- **`agentGuard` (`@float/wallet`)** — interprets the *same* permission-spec object
+  handed to `toCallPolicy` against a proposed call batch. `apps/agent-service`'s
+  execute worker runs it as a pre-flight: a mis-built batch is marked
+  `sweep_*.blocked` and never reaches the bundler. It is defense in depth, not the
+  boundary — the cryptographic validator is authoritative. `packages/wallet/src/guard.test.ts`
+  exercises every rejection code.
+- **`pnpm --filter @float/agent-service attack:out-of-policy`** — against a live
+  bundler and a real provisioned business, the agent signer attempts nine
+  out-of-policy UserOperations (over-cap `sweepIn`, over-cap / unlimited / wrong-spender
+  `approve`, wrong selector, wrong target, non-zero value, mixed batch). It asserts
+  every one is rejected at validation and that the smart account's USDC / FloatUSTB
+  balances and ENS `float.*` records are byte-for-byte unchanged. Part of the
+  pre-deploy checklist in `docs/runbook.md`.
 
 ## Layer 2 — off-chain, business-editable
 

@@ -2,7 +2,7 @@ import { getAddress, http, type Hex } from 'viem';
 import type { Worker } from 'bullmq';
 import { requireEnv } from '@float/config';
 import { encodeSweepIn, encodeSweepOut, floatContracts } from '@float/contracts-sdk';
-import { restoreSessionKeyClient } from '@float/wallet';
+import { agentGuard, PolicyGuardError, restoreSessionKeyClient } from '@float/wallet';
 import { quoteSweepMinOut } from '@float/uniswap';
 import { logger } from '../logger.js';
 import {
@@ -105,6 +105,32 @@ export function startExecuteWorker(rt: AgentRuntime): Worker<ExecuteJob> {
           idempotencyKey: key,
           status: 'pending',
         }));
+
+      // Pre-flight: the ZeroDev call policy is the authoritative gate, but a bug
+      // in our own batch construction would just burn a bundler round-trip and
+      // fail at validation. Interpret the same permission spec locally first.
+      try {
+        agentGuard({
+          deployment: rt.deployment,
+          maxSweepPerTx: BigInt(sk.policySnapshot.maxSweepPerTx),
+        }).assertBatch(calls);
+      } catch (err) {
+        if (!(err instanceof PolicyGuardError)) throw err;
+        await updateSweep(rt.db, sweep.id, {
+          status: 'failed',
+          error: `out-of-policy batch: ${err.violation.code} — ${err.violation.message}`,
+        });
+        await appendAudit(rt.db, {
+          actorType: 'agent',
+          actorId: rt.signers.agentSession.address,
+          businessId,
+          action: `sweep_${direction}.blocked`,
+          target: smartAccount,
+          after: { violation: err.violation.code, message: err.violation.message },
+        });
+        log.error({ violation: err.violation }, 'sweep batch failed the local policy guard — not submitting');
+        throw err;
+      }
 
       const client = await restoreSessionKeyClient({
         publicClient: rt.publicClient,
