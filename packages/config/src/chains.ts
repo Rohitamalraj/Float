@@ -22,20 +22,25 @@ export interface UniswapPermissionedAddresses {
 }
 
 /**
- * ENS v2 (beta) deployment.
- *
- * ⚠ The Sepolia addresses below are provisional (captured from docs, not yet
- * verified against live contracts). `packages/ens` MUST verify these on first
- * connect — see `docs/mocked-vs-real.md`. Override via env when confirmed.
+ * ENS v2 (beta) deployment — canonical contracts-v2 deployment of 2026-07-30
+ * (PR #388), verified on Sepolia via `cast codesize`. Addresses come from the
+ * ENS team's own `ensdomains/ens-cli`.
  */
 export interface EnsV2Addresses {
-  ethRegistry?: Address;
-  ethRegistrar?: Address;
-  batchRegistrar?: Address;
-  publicResolverV2?: Address;
-  permissionedResolverImpl?: Address;
-  standaloneHcaFactory?: Address;
-  universalResolver?: Address;
+  /** Root / `.eth` PermissionedRegistry. */
+  registry?: Address;
+  /** `.eth` registrar (2LD registration). */
+  registrar?: Address;
+  /** ERC-20 the registrar charges for 2LD registration. */
+  paymentToken?: Address;
+  /** VerifiableFactory that deploys resolver + subregistry proxies via CREATE2. */
+  resolverFactory?: Address;
+  /** PermissionedResolver implementation behind the per-owner proxies. */
+  resolverImplementation?: Address;
+  /** EIP-1167 proxy logic used for CREATE2 address prediction. */
+  resolverProxyLogic?: Address;
+  /** UserRegistry implementation (deployed per parent name to hold subnames). */
+  subregistryImplementation?: Address;
 }
 
 export interface ChainConfig {
@@ -91,13 +96,13 @@ const SEPOLIA: ChainConfig = {
     poolManager: '0xE03A1074c86CFeDd5C142C4F04F1a1536e203543',
   },
   ens: {
-    // ⚠ UNVERIFIED — confirm against https://docs.ens.domains/learn/deployments
-    ethRegistry: '0xbdc85dd5b15d7ecb354cd7cb6f2c50b4f2c4f0e2',
-    ethRegistrar: '0xa88553f454b77203b0d036a05c894d555eaaa2cc',
-    batchRegistrar: '0x8b16d15f3e51074d0e06f3cf4a0053f7cb92a7fb',
-    publicResolverV2: '0xe7b9a25607e02da8145e4eb1836ca539e53f11f7',
-    permissionedResolverImpl: '0x9eae5c2730a7dd16bdd1dee6421a1b91e3b0365e',
-    standaloneHcaFactory: '0x900ff7cf617ef9d802178b4ef480491e3a782672',
+    registry: '0xBDC85dD5b15D7ecb354cd7cb6f2c50b4f2c4F0E2',
+    registrar: '0xa88553F454b77203B0D036A05c894d555EAAa2Cc',
+    paymentToken: '0x768F42455A2D082E23ceeF7d51e5787C82d67a39',
+    resolverFactory: '0x10dC6333CDFe1FCEf624c6e0a8221b91804Cd7ef',
+    resolverImplementation: '0x9EAe5C2730a7dD16BDD1DeE6421a1B91e3B0365e',
+    resolverProxyLogic: '0xA136BeE4E37B44586242e516a39893EfD54315e9',
+    subregistryImplementation: '0x624a25d67B59D587752EbEc8DdeD8827dAe52050',
   },
 };
 
