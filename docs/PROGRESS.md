@@ -34,8 +34,7 @@ Tracks the phased plan in `~/.claude/plans/zazzy-inventing-volcano.md`.
   `0xE03A…3543` added to `@float/config`.
 
 ### Phase 1 remaining (deferred, non-blocking)
-- [ ] `SeedLiquidity.s.sol` — a standalone script for real Sepolia pool liquidity (the fork test
-      already proves the mint path via `PermissionedPositionManager.modifyLiquidities`).
+- [x] `SeedLiquidity.s.sol` — done in Phase 6 (see below).
 
 ## ✅ Phase 2 — Core packages
 - `@float/db` — 15-table Drizzle schema + client + migration + docker-compose. 10 tests.
@@ -115,3 +114,12 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
   `NEXT_PUBLIC_ENS_PARENT`. 5 tests (format helpers); `next build` clean (19 routes).
 
 ## ⬜ Phase 6 — hardening
+- [x] **Layer 1 policy guard** (`@float/wallet` `agentGuard`) — interprets the same permission-spec
+      object handed to ZeroDev `toCallPolicy`; the agent-service execute worker runs it as a
+      pre-flight (`sweep_*.blocked` on a mismatch, never reaches the bundler). 15 tests covering
+      every rejection code.
+- [x] **Scripted out-of-policy attack** (`pnpm --filter @float/agent-service attack:out-of-policy`)
+      — nine adversarial UserOperations against a live bundler + real business; asserts
+      cryptographic rejection at validation and byte-for-byte unchanged on-chain + ENS state.
+- [x] **`SeedLiquidity.s.sol`** — standalone script to seed the live FloatUSTB/USDC Permissioned
+      Pool with a full-range position after `DeployVenue` (mirrors the proven fork-test mint path).
