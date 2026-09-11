@@ -49,13 +49,47 @@ any real capital is at risk (`docs/runbook.md` §1).
   larger `SEED_USDC` to deepen it.
 - `FloatSweepExecutor` is `isVerified` in `FloatComplianceRegistry`.
 
+### Services — live and validated against this deployment
+
+Postgres + Redis (`infra/docker-compose.yml`) and all three Node services
+have been run end-to-end against the addresses above and confirmed healthy:
+
+```sh
+docker compose -f infra/docker-compose.yml up -d
+pnpm db:migrate
+node apps/agent-service/dist/index.js   # :8080 — /health, /ready
+node apps/gateway/dist/index.js         # :8402 — /health, /
+cd apps/web && next start -p 3000       # :3000 — SIWE login works
+```
+
+This run **found and fixed a real bug**: BullMQ rejects `:` in queue names
+(`apps/agent-service/src/queues.ts` used `float:evaluate` etc.) — it had
+never been exercised against a real Redis before. Fixed to `float-evaluate`
+style names; see the `fix(agent-service)` commit.
+
+The root `.env` this run used holds `ENS_PROVISIONER_PRIVATE_KEY` and
+`AGENT_SESSION_SIGNER_PRIVATE_KEY` (generated the same way as the deploy
+roles — fresh, local-only, gitignored) in addition to the deploy-role keys
+reused from `contracts/.env`.
+
 ### Not yet done
 
-- No business has been provisioned (`float.eth` ENS parent not yet
-  registered on this chain, no smart account deployed, no session key
-  granted). See `docs/runbook.md` and the onboarding flow in `apps/web`.
-- `apps/agent-service`, `apps/gateway`, `apps/web` are not yet running against
-  this deployment — needs a root `.env` populated with the addresses above
-  plus `DATABASE_URL`/`REDIS_URL` (`infra/docker-compose.yml`).
+- **No business is provisioned.** Blocked on two external, account-gated
+  prerequisites neither script nor key generation can substitute for:
+  - **`float.eth` itself isn't registered on the ENS v2 beta.** Confirmed via
+    web research: ENS v2's `.eth` registrar uses a commit-reveal flow paid in
+    a stablecoin of the caller's choice (not a permissionless `register()` on
+    the raw registry) — `packages/ens` has no `ethRegistrarController` ABI
+    for this, and registering Float's own top-level name is meant to be a
+    one-time manual action via the ENS beta app (app.ens.domains, Sepolia),
+    not something the per-business automation
+    (`planBusinessProvisioning`/`planParentSubregistry`) does — that code
+    assumes the parent name already exists and only needs its `tokenId`.
+  - **No ZeroDev project** — `ZERODEV_PROJECT_ID` / `ZERODEV_BUNDLER_RPC` /
+    `ZERODEV_PAYMASTER_RPC` are unset. Deploying a Kernel v3 smart account and
+    granting a session key both go through a ZeroDev bundler; this needs a
+    (free) account at dashboard.zerodev.app.
+- **Bazantic gateway not registered** — needs a bazantic.com account to point
+  at the running gateway and load `docs/recipe.bazantic.json`.
 - Pool liquidity is faucet-sized; real sweeps of any size will see
   meaningful slippage until it's deepened.
