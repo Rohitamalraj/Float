@@ -1,11 +1,13 @@
 import { Queue, Worker, type ConnectionOptions, type Processor, type WorkerOptions } from 'bullmq';
 import type { RedisConnection } from './runtime.js';
 
+// BullMQ reserves ':' as its own Redis-key separator and rejects it in a
+// queue name (throws "Queue name cannot contain :" at construction).
 export const QUEUE = {
-  evaluate: 'float:evaluate',
-  execute: 'float:execute',
-  oracleSync: 'float:oracle-sync',
-  policySync: 'float:policy-sync',
+  evaluate: 'float-evaluate',
+  execute: 'float-execute',
+  oracleSync: 'float-oracle-sync',
+  policySync: 'float-policy-sync',
 } as const;
 
 export type QueueName = (typeof QUEUE)[keyof typeof QUEUE];
