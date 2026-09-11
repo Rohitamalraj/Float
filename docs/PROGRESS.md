@@ -154,6 +154,14 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
       (`docs/runbook.md` §7) is documented, not guessed at with unused dependencies.
 
 Float is now feature-complete across all 6 planned phases. What remains is **operational, not
-code**: deploying the venue to Sepolia for real (`DeployCore` → `DeployVenue` → `SeedLiquidity`),
-provisioning `float.eth`, funding `FloatYieldReserve`, standing up Postgres/Redis + the two
-services, and registering the Bazantic gateway — see `docs/runbook.md`.
+code**: provisioning `float.eth`, funding `FloatYieldReserve` further, standing up Postgres/Redis
++ the two services, and registering the Bazantic gateway — see `docs/runbook.md`.
+
+## ✅ Sepolia deployment (live)
+
+`DeployCore` → `FloatYieldReserve.acceptOwnership()` → `DeployVenue` → `SeedLiquidity`, all
+broadcast successfully. Full addresses, roles, and current state in `docs/deployments.md`.
+FloatSweepExecutor is verified in the compliance registry; the FloatUSTB/USDC pool is initialized
+and holds one seeded position. Pool liquidity is faucet-sized (8 USDC) — enough to prove the
+pipeline, not production depth. No business provisioned yet; the three Node services aren't
+running against this deployment yet.

@@ -1,0 +1,10 @@
+{
+  "chainId": 11155111,
+  "fee": 3000,
+  "floatUstb": "0x1e4124aBF103097cc6C56C26009140C34469d258",
+  "permissionsAdapter": "0xB6a78942a7e057BEEe2B7558Ab849019e12AbdBC",
+  "poolId": "0xb5d24ca47a25b5286fe5658bdce176504f0d6222bde3be484f8026af5c238514",
+  "poolManager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
+  "sweepExecutor": "0x40D916360e09C4f7A03AB6147E7E360271ebC855",
+  "tickSpacing": 60
+}
