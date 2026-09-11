@@ -113,7 +113,7 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
 - `@float/db`: `businesses.ens_resolver` used by the buffer flow. `@float/config`:
   `NEXT_PUBLIC_ENS_PARENT`. 5 tests (format helpers); `next build` clean (19 routes).
 
-## ⬜ Phase 6 — hardening
+## ✅ Phase 6 — hardening
 - [x] **Layer 1 policy guard** (`@float/wallet` `agentGuard`) — interprets the same permission-spec
       object handed to ZeroDev `toCallPolicy`; the agent-service execute worker runs it as a
       pre-flight (`sweep_*.blocked` on a mismatch, never reaches the bundler). 15 tests covering
@@ -145,3 +145,15 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
 - [x] **Runbooks** (`docs/runbook.md`) — key rotation, session-key re-grant, compliance-oracle
       incident response, pool/venue migration, ENS name migration, gateway scaling, and the
       observability signals to alert on today (structured-log fields) pending a metrics pipeline.
+- [x] **Observability** — scoped to what's real today rather than standing up an unused metrics
+      backend: `/health` (+ `/ready` on agent-service) on every long-running service, and
+      structured pino logs with consistent `businessId`/`worker`/`action` fields so the alert
+      signals in `docs/runbook.md` §7 (`sweep_*.blocked`, `sweep_*.failed`, oracle/policy-sync
+      errors, watcher lag) are queryable from day one. Wiring an actual Prometheus/Grafana
+      pipeline is deferred to when a metrics backend is chosen operationally — the seam
+      (`docs/runbook.md` §7) is documented, not guessed at with unused dependencies.
+
+Float is now feature-complete across all 6 planned phases. What remains is **operational, not
+code**: deploying the venue to Sepolia for real (`DeployCore` → `DeployVenue` → `SeedLiquidity`),
+provisioning `float.eth`, funding `FloatYieldReserve`, standing up Postgres/Redis + the two
+services, and registering the Bazantic gateway — see `docs/runbook.md`.
