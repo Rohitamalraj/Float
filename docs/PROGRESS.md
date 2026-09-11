@@ -123,3 +123,9 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
       cryptographic rejection at validation and byte-for-byte unchanged on-chain + ENS state.
 - [x] **`SeedLiquidity.s.sol`** — standalone script to seed the live FloatUSTB/USDC Permissioned
       Pool with a full-range position after `DeployVenue` (mirrors the proven fork-test mint path).
+- [x] **Playwright E2E** (`apps/web/e2e/`) — full-stack browser test against a live app + Postgres:
+      connect → real SIWE sign-in → 4-step onboarding wizard → dashboard, plus the
+      unauthenticated-redirect guard. The wallet is simulated by a minimal EIP-1193/EIP-6963
+      provider (`fixtures/mock-wallet.ts`) backed by a local viem account — signing happens in the
+      Playwright process, so the page only ever sees a real signature. Opt-in like the contracts
+      fork tests (needs a running server + DB); not wired into CI yet — see `e2e/README.md`.
