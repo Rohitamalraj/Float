@@ -129,3 +129,9 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
       provider (`fixtures/mock-wallet.ts`) backed by a local viem account — signing happens in the
       Playwright process, so the page only ever sees a real signature. Opt-in like the contracts
       fork tests (needs a running server + DB); not wired into CI yet — see `e2e/README.md`.
+- [x] **Sepolia integration harness** (`pnpm --filter @float/agent-service harness`) — drives one
+      provisioned business through payment-in → sweep-in → obligation → sweep-out against a
+      *running* agent-service and live chain: funds the account, enqueues `evaluate`, polls
+      Postgres for the confirmed sweeps, inserts a near-due obligation, and reports the on-chain
+      deltas (FloatUSTB share price, Float treasury USDC spread). Observes only — never signs a
+      session-key UserOp itself, so it tests the real deployed pipeline.

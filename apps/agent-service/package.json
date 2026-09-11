@@ -9,6 +9,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "start": "node dist/index.js",
     "attack:out-of-policy": "node dist/scripts/out-of-policy-attack.js",
+    "harness": "node dist/scripts/integration-harness.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
