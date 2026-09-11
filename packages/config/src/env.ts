@@ -112,6 +112,8 @@ const EnvSchema = z.object({
   X402_RECEIVING_ADDRESS: address,
   X402_PRICE_USDC: z.coerce.number().positive().default(0.01),
   X402_FACILITATOR_URL: z.string().url().default('https://x402.org/facilitator'),
+  /** Per-caller-IP request budget for the gateway's free/pre-payment routes. */
+  GATEWAY_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(60),
 
   // web
   WEB_PORT: z.coerce.number().int().positive().default(3000),

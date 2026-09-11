@@ -135,3 +135,13 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
       Postgres for the confirmed sweeps, inserts a near-due obligation, and reports the on-chain
       deltas (FloatUSTB share price, Float treasury USDC spread). Observes only — never signs a
       session-key UserOp itself, so it tests the real deployed pipeline.
+- [x] **Security pass** (`docs/security-review.md`) — access-control + reentrancy read-through of
+      all 6 contracts (no code issues found; findings are the properties the design already relies
+      on, made explicit), the key-custody table, and what this pass didn't cover (external audit,
+      dependency scanning, load/DoS testing). Closed one real gap found during the pass: the
+      gateway had no request throttling on its free/pre-payment routes — added
+      `apps/gateway/src/rate-limit.ts` (in-memory per-IP fixed window, `GATEWAY_RATE_LIMIT_PER_MINUTE`,
+      9 tests). Admin RBAC (`requireAdmin`) reviewed — no gap found.
+- [x] **Runbooks** (`docs/runbook.md`) — key rotation, session-key re-grant, compliance-oracle
+      incident response, pool/venue migration, ENS name migration, gateway scaling, and the
+      observability signals to alert on today (structured-log fields) pending a metrics pipeline.

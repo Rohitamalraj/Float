@@ -9,6 +9,7 @@ import {
   type CheckRequest,
 } from './check.js';
 import { logger } from './logger.js';
+import { rateLimit } from './rate-limit.js';
 import type { GatewayRuntime } from './runtime.js';
 import { priceToAtomic, x402Payment, type X402Outcome } from './x402.js';
 
@@ -16,6 +17,18 @@ type Env = { Variables: { x402: X402Outcome } };
 
 export function createApp(rt: GatewayRuntime): Hono<Env> {
   const app = new Hono<Env>();
+  const freeLimiter = rateLimit({
+    windowMs: 60_000,
+    max: rt.rateLimitPerMinute,
+    keyPrefix: 'free',
+  });
+  const checkLimiter = rateLimit({
+    // paid calls are already throttled economically by x402; this only caps
+    // pre-payment challenge / invalid-payment spam.
+    windowMs: 60_000,
+    max: rt.rateLimitPerMinute * 5,
+    keyPrefix: 'check',
+  });
   const deps: CheckDeps = {
     publicClient: rt.publicClient,
     db: rt.db,
@@ -46,7 +59,7 @@ export function createApp(rt: GatewayRuntime): Hono<Env> {
     }),
   );
 
-  app.get('/v1/policy/:ensName', async (c) => {
+  app.get('/v1/policy/:ensName', freeLimiter, async (c) => {
     try {
       return c.json(await readPolicySummary(deps, c.req.param('ensName')));
     } catch (err) {
@@ -58,6 +71,7 @@ export function createApp(rt: GatewayRuntime): Hono<Env> {
 
   app.post(
     '/v1/check',
+    checkLimiter,
     x402Payment(rt.x402, { description: 'Float sweep-decision check' }),
     async (c) => {
       const started = Date.now();

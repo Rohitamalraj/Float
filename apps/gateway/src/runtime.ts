@@ -34,6 +34,7 @@ export interface GatewayRuntime {
   x402: X402Config;
   maxComplianceAgeMs: number;
   port: number;
+  rateLimitPerMinute: number;
 }
 
 let cached: GatewayRuntime | undefined;
@@ -74,6 +75,7 @@ export function getRuntime(): GatewayRuntime {
     },
     maxComplianceAgeMs: env.MAX_COMPLIANCE_AGE_HOURS * 3600_000,
     port: env.GATEWAY_PORT,
+    rateLimitPerMinute: env.GATEWAY_RATE_LIMIT_PER_MINUTE,
   };
   return cached;
 }
