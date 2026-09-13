@@ -168,11 +168,91 @@ Why route through a purpose-built `FloatSweepExecutor` instead of pointing the s
 
 ## How Each Sponsor Stack Is Used (Load-Bearing, Not Decorative)
 
-**Uniswap v4 — the settlement *and* compliance venue.** Float integrates with a real Uniswap v4 **Permissioned Pool** deployment (`PermissionsAdapterFactory`, `PermissionedPositionManager`, `PermissionedHooks`, permissioned Universal Router — all live on Sepolia). Every sweep in/out is a real swap through that pool, and the pool's own hook — reading `FloatAllowlistChecker` — decides whether the transaction is even allowed to execute.
+### Uniswap v4 — the settlement *and* compliance venue
 
-**ENS v2 — the wallet's actual name and its compliance carrier.** `mybiz.float.eth` isn't a label pointing at a wallet; via ENS v2's registry it resolves directly to the smart account, so it's the address people and agents actually pay. The same name carries the KYC/allowlist status the pool checks, in a text record writable only by the compliance oracle (Enhanced Access Control, per-record roles) — one persistent identity for payment, compliance, and delegated signing.
+Float doesn't just call a router — it stands up and operates a real **Uniswap v4 Permissioned Pool**: the actual hook standard (shipped July 2026, built with Securitize/Superstate/Dowgo) that lets a compliance allowlist be enforced *inside the pool itself*, at the protocol level, rather than bolted on around it. Every sweep in/out — and the one and only thing the agent's session key is capable of triggering — is a real swap through this pool.
 
-**Bazantic / x402 — the decision logic as its own callable product.** Float's "is this business allowlisted, should it sweep right now" check is exposed as a metered x402 endpoint on Bazantic (`checkSweep` / `getPolicy`), published as the Recipe **`float-treasury-sweep-advisor`** — any other agent-commerce builder can pay per call to use Float's treasury logic instead of building their own.
+**1. Deploying a real Permissioned Pool** (`contracts/script/DeployVenue.s.sol`) — Float doesn't fork or fake the pool; it wires a genuine one end to end using Uniswap's own factory:
+
+```solidity
+// Create the PermissionsAdapter — the ERC-20 wrapper the pool actually trades,
+// backed 1:1 by FloatUSTB, gated by Float's own IAllowlistChecker
+adapter = IPermissionsAdapterFactory(u.permissionsAdapterFactory)
+    .createPermissionsAdapter(IERC20(floatUstb), deployer, IAllowlistChecker(checker));
+
+// Uniswap's factory requires a small deposit + verification before the
+// adapter is allowed to go live
+IERC20(floatUstb).approve(adapter, shares);
+IPermissionsAdapter(adapter).depositForVerification(shares);
+IPermissionsAdapterFactory(u.permissionsAdapterFactory).verifyPermissionsAdapter(adapter);
+
+// Allowlist the exact routers/quoters/hooks Float's pool is allowed to trade through
+IPermissionsAdapter(adapter).updateAllowedWrapper(u.permissionedPositionManager, true);
+IPermissionsAdapter(adapter).updateAllowedWrapper(u.universalRouter, true);
+IPermissionsAdapter(adapter).updateAllowedHook(IHooks(u.permissionedHooks), true);
+```
+
+**2. Bridging Float's compliance registry into the pool's own allowlist gate** (`FloatAllowlistChecker.sol`) — implements Uniswap's `IAllowlistChecker` interface directly, so the pool's hook calls straight into Float's on-chain KYC state on every single swap attempt:
+
+```solidity
+contract FloatAllowlistChecker is BaseAllowlistChecker {
+    IFloatComplianceRegistry public immutable REGISTRY;
+
+    function checkAllowlist(address account, address /*token*/)
+        public view override returns (PermissionFlag flag)
+    {
+        if (REGISTRY.isVerified(account)) {
+            flag = flag | PermissionFlags.SWAP_ALLOWED;
+        }
+        if (account == LIQUIDITY_MANAGER) {
+            flag = flag | PermissionFlags.SWAP_ALLOWED | PermissionFlags.LIQUIDITY_ALLOWED;
+        }
+    }
+}
+```
+
+This is what makes the claim "the pool's hook and the ENS attestation are the same allowlist" literally true, not a diagram simplification: there is exactly one `isVerified` bit, and both the AMM and the ENS record read it.
+
+**3. Building real Universal Router `execute()` calldata** (`libraries/FloatSwapEncoder.sol`) — permissioned pools don't expose a plain `swap()`; every trade is an ABI-encoded action sequence sent through the Universal Router. `FloatSweepExecutor` builds this itself, on chain, for every sweep:
+
+```solidity
+// SWAP_EXACT_IN_SINGLE → SETTLE_ALL → TAKE, Universal Router's v4 action encoding
+bytes memory actions = abi.encodePacked(
+    uint8(Actions.SWAP_EXACT_IN_SINGLE), uint8(Actions.SETTLE_ALL), uint8(Actions.TAKE)
+);
+params[0] = abi.encode(IV4Router.ExactInputSingleParams({
+    poolKey: plan.poolKey, zeroForOne: plan.zeroForOne,
+    amountIn: plan.amountIn, amountOutMinimum: plan.amountOutMinimum,
+    minHopPriceX36: 0, hookData: bytes("")
+}));
+params[1] = abi.encode(plan.inputCurrency, uint256(plan.amountIn));           // SETTLE_ALL
+params[2] = abi.encode(plan.outputCurrency, plan.recipient, ActionConstants.OPEN_DELTA); // TAKE
+```
+
+This is exactly why the agent's session key can't be pointed straight at the router: a raw `execute(commands, inputs, deadline)` call is opaque ABI-encoded bytes a `toCallPolicy` cannot bound by amount or token — there's no `args[0]` to constrain. `FloatSweepExecutor` builds this calldata itself, internally, from two typed `uint256` parameters (`sweepIn(usdcIn, minTokenOut)` / `sweepOut(tokenIn, minUsdcOut)`) that *are* boundable — so the cryptographic cap lands on the one thing that actually matters (the amount), while the router complexity stays entirely off the agent's signable surface.
+
+**4. Permit2, not standing approvals** — the executor never holds a long-lived allowance to the router; it grants a fresh, exact-amount, 600-second Permit2 allowance per swap:
+
+```solidity
+function _authorizeRouter(IERC20 token, uint256 amount) private {
+    if (token.allowance(address(this), address(PERMIT2)) < amount) {
+        token.forceApprove(address(PERMIT2), type(uint256).max);
+    }
+    PERMIT2.approve(address(token), address(ROUTER), amount.toUint160(), uint48(block.timestamp) + ALLOWANCE_TTL);
+}
+```
+
+Because the executor never custodies funds between calls (everything passes through in one transaction), a residual approval within that 600-second window carries no exploitable value even in the worst case.
+
+**Live on Sepolia, not a fork test**: `PermissionsAdapterFactory`, `PermissionedPositionManager`, `PermissionedHooks`, and the permissioned Universal Router are Uniswap's real deployed Sepolia addresses (see [Deployed Contracts](#deployed-contracts--sepolia-testnet)). Float deployed a real adapter against them, seeded a real `FloatUSTB/USDC` pool, and has executed real sweeps through it — see [`docs/deployments.md`](docs/deployments.md).
+
+### ENS v2 — the wallet's actual name and its compliance carrier
+
+`mybiz.float.eth` isn't a label pointing at a wallet; via ENS v2's registry it resolves directly to the smart account, so it's the address people and agents actually pay. The same name carries the KYC/allowlist status the pool checks, in a text record writable only by the compliance oracle (Enhanced Access Control, per-record roles) — one persistent identity for payment, compliance, and delegated signing.
+
+### Bazantic / x402 — the decision logic as its own callable product
+
+Float's "is this business allowlisted, should it sweep right now" check is exposed as a metered x402 endpoint on Bazantic (`checkSweep` / `getPolicy`), published as the Recipe **`float-treasury-sweep-advisor`** — any other agent-commerce builder can pay per call to use Float's treasury logic instead of building their own.
 
 ---
 
