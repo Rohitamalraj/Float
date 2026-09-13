@@ -129,6 +129,10 @@ Next.js 16 (App Router) + wagmi + SIWE, backed by `@float/db`. Plain CSS.
       provider (`fixtures/mock-wallet.ts`) backed by a local viem account — signing happens in the
       Playwright process, so the page only ever sees a real signature. Opt-in like the contracts
       fork tests (needs a running server + DB); not wired into CI yet — see `e2e/README.md`.
+      **Actually executed** (installed Chromium, ran against the live app + Postgres) — found and
+      fixed two real bugs the typecheck/lint pass never could: an invalid test private key
+      (1 hex char short) and a wallet-auto-reconnect race the test didn't account for. Both tests
+      pass; the onboarding test's business row is confirmed created via the real API, not a mock.
 - [x] **Sepolia integration harness** (`pnpm --filter @float/agent-service harness`) — drives one
       provisioned business through payment-in → sweep-in → obligation → sweep-out against a
       *running* agent-service and live chain: funds the account, enqueues `evaluate`, polls
