@@ -9,6 +9,7 @@ import {
   type CheckRequest,
 } from './check.js';
 import { logger } from './logger.js';
+import { buildOpenApiDocument } from './openapi.js';
 import { rateLimit } from './rate-limit.js';
 import type { GatewayRuntime } from './runtime.js';
 import { priceToAtomic, x402Payment, type X402Outcome } from './x402.js';
@@ -58,6 +59,13 @@ export function createApp(rt: GatewayRuntime): Hono<Env> {
       },
     }),
   );
+
+  // Bazantic's gateway-import flow reads this to turn /v1/check and
+  // /v1/policy into agent-callable tools — see docs/bazantic-setup.md.
+  app.get('/openapi.json', (c) => {
+    const base = new URL(c.req.url).origin;
+    return c.json(buildOpenApiDocument(base, rt.x402.priceUsdc));
+  });
 
   app.get('/v1/policy/:ensName', freeLimiter, async (c) => {
     try {
