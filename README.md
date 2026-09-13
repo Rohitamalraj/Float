@@ -164,6 +164,26 @@ Why route through a purpose-built `FloatSweepExecutor` instead of pointing the s
 - **`agentGuard`** (`packages/wallet`) — a pre-flight check in the execute worker that interprets the same permission-spec object handed to `toCallPolicy`, catching a mis-built batch before it burns a bundler round-trip.
 - **`attack:out-of-policy`** (`apps/agent-service`) — against a live ZeroDev bundler and a real provisioned Sepolia business, the agent signer attempts **nine adversarial UserOperations** (over-cap sweep, over-cap/unlimited/wrong-spender approve, wrong selector, wrong target, non-zero value, mixed batch). All nine were cryptographically rejected at validation with zero state change — real Kernel v3 account, real bundler, real rejection, not a fork test.
 
+**Actual run, live against `acme-labs.float.eth` (smart account `0xFfa77d7d281f417b77f5437b034b809e2a49C56F`):**
+
+| # | Vector | Rejected because | Result |
+|---|---|---|---|
+| 1 | `sweepIn` over the per-tx cap | `sweepIn` arg0 must be ≤ `maxSweepPerTx` | ✅ rejected — `validateUserOp` reverted |
+| 2 | `USDC.approve` over the per-tx cap | `approve` arg1 must be ≤ `maxSweepPerTx` | ✅ rejected — `validateUserOp` reverted |
+| 3 | Unlimited `USDC.approve` to the executor | exact-amount approvals only; unlimited disabled | ✅ rejected — `validateUserOp` reverted |
+| 4 | `USDC.approve` to an attacker address | spender must equal `FloatSweepExecutor` | ✅ rejected — `validateUserOp` reverted |
+| 5 | `FloatUSTB.approve` to an attacker address | spender must equal `FloatSweepExecutor` | ✅ rejected — `validateUserOp` reverted |
+| 6 | `USDC.transfer` (wrong selector, permitted target) | only `approve()` is permitted on the token contracts | ✅ rejected — `validateUserOp` reverted |
+| 7 | Call an unrelated Float contract (wrong target) | only the executor + the two tokens are permitted targets | ✅ rejected — `validateUserOp` reverted |
+| 8 | Non-zero ETH value on an otherwise-valid `sweepIn` | every permitted call has `valueLimit == 0` | ✅ rejected — `validateUserOp` reverted |
+| 9 | Valid approve + an out-of-policy approve, batched | every call in a batch must independently satisfy the policy | ✅ rejected — `validateUserOp` reverted |
+
+**Result: 9/9 PASS. State unchanged** — `USDC 0 → 0`, `fUSTB 0 → 0`. Reproduce it yourself:
+
+```bash
+ATTACK_CONFIRM=1 pnpm --filter @float/agent-service attack:out-of-policy -- --business <business-id>
+```
+
 ---
 
 ## How Each Sponsor Stack Is Used (Load-Bearing, Not Decorative)
