@@ -52,11 +52,20 @@ natural-language composer — paste:
 It should bind to `checkSweep` and `getPolicy` automatically since they're
 already registered.
 
+## Recipe: published
+
+**`float-treasury-sweep-advisor`** is live. Tested against the real gateway
+before publishing — `checkSweep` on `acme-labs.float.eth` returned a genuine
+200 from live Sepolia (KYC verified, buffer 2 / cap 5 USDC, `allowed: false`
+because that business has 0 USDC and no yield position yet — an accurate
+result, not a bug), and the LLM correctly skipped the unneeded `getPolicy`
+call and produced a clean structured Decision/Direction/Amount/Reason report.
+
 ## Remaining, optional
 
 Publish the gateway to the Bazantic Marketplace (currently unpublished —
-only callable by this account until then), claim a custom handle, and
-publish the Recipe above.
+only callable by this account until then) and claim a custom handle. Neither
+blocks anything — the gateway and Recipe are both fully functional already.
 
 
 Researched Bazantic's actual registration flow (`bazantic.com/docs/deploy-a-gateway`,

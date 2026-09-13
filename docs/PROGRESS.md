@@ -193,7 +193,13 @@ flow, researched from `bazantic.com/docs`). Live at
 `tools/list` correctly exposes `checkSweep` (`POST /v1/check`, $0.01) and `getPolicy` (`GET
 /v1/policy/:ensName`, free) with our exact descriptions/schemas. `X402_MODE=permissive` since
 Bazantic fronts payment collection on its own layer. Full steps and status in
-`docs/bazantic-setup.md`. Remaining: publish to the Marketplace, author the Recipe.
+`docs/bazantic-setup.md`.
+
+The Recipe (`float-treasury-sweep-advisor`) is authored, tested against the live gateway (a real
+`checkSweep` call against `acme-labs.float.eth` returned genuine on-chain data — correctly
+KYC-verified, correctly `allowed: false` since that business holds 0 USDC), and **published** —
+Float is now one callable MCP tool for any agent on Bazantic. Remaining is pure optional polish
+(Marketplace listing, a custom handle) — nothing left blocks anything.
 
 This closes the last item on the original plan — **all 6 phases plus hardening are done, the
 product is deployed on live Sepolia end to end, and it's now reachable by any agent through
