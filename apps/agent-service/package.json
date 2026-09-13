@@ -10,6 +10,7 @@
     "start": "node dist/index.js",
     "attack:out-of-policy": "node dist/scripts/out-of-policy-attack.js",
     "harness": "node dist/scripts/integration-harness.js",
+    "register-ens-parent": "node dist/scripts/register-ens-parent.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
     "test": "vitest run",

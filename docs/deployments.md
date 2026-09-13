@@ -72,23 +72,38 @@ The root `.env` this run used holds `ENS_PROVISIONER_PRIVATE_KEY` and
 roles — fresh, local-only, gitignored) in addition to the deploy-role keys
 reused from `contracts/.env`.
 
+### ENS v2 — `float.eth` (Sepolia beta)
+
+Registered for real via the beta's actual `ETHRegistrar` (commit-reveal,
+paid in USDC — the registrar accepts any ERC-20; confirmed live on-chain
+`getRegisterPrice("float", 365 days, USDC)` = 8 USDC, 0 premium). No manual
+ENS-app step turned out to be needed — see
+`contracts/script/RegisterEnsParent.s.sol`.
+
+| Item | Value |
+|---|---|
+| Name | `float.eth` |
+| tokenId (root registry) | `80733931982562367118208411516584939208225537793689152449941908423395975888896` |
+| Owner | ENS provisioner `0x574985Cb004d9b29360A566224F46852eA3Bd097` |
+| Subregistry (attached) | `0x6Eb7B0dc3d7f330CCA85fCEC52dC6af694DC4f8F` |
+| Duration | 1 year from registration |
+
+Attached via `apps/agent-service/src/scripts/register-ens-parent.ts`
+(`pnpm --filter @float/agent-service register-ens-parent`, needs
+`ENS_PROVISIONER_PRIVATE_KEY` + `ENS_PARENT_TOKEN_ID` — the ETHRegistrar's
+`register()` return value). Business onboarding
+(`planBusinessProvisioning`, driven by `apps/web`'s onboarding flow) can now
+mint real subnames — `<label>.float.eth` — under this subregistry.
+
 ### Not yet done
 
-- **No business is provisioned.** Blocked on two external, account-gated
-  prerequisites neither script nor key generation can substitute for:
-  - **`float.eth` itself isn't registered on the ENS v2 beta.** Confirmed via
-    web research: ENS v2's `.eth` registrar uses a commit-reveal flow paid in
-    a stablecoin of the caller's choice (not a permissionless `register()` on
-    the raw registry) — `packages/ens` has no `ethRegistrarController` ABI
-    for this, and registering Float's own top-level name is meant to be a
-    one-time manual action via the ENS beta app (app.ens.domains, Sepolia),
-    not something the per-business automation
-    (`planBusinessProvisioning`/`planParentSubregistry`) does — that code
-    assumes the parent name already exists and only needs its `tokenId`.
-  - **No ZeroDev project** — `ZERODEV_PROJECT_ID` / `ZERODEV_BUNDLER_RPC` /
-    `ZERODEV_PAYMASTER_RPC` are unset. Deploying a Kernel v3 smart account and
-    granting a session key both go through a ZeroDev bundler; this needs a
-    (free) account at dashboard.zerodev.app.
+- **No business is provisioned.** The ENS side is ready (above). What's still
+  missing is **a ZeroDev project** — `ZERODEV_PROJECT_ID` /
+  `ZERODEV_BUNDLER_RPC` / `ZERODEV_PAYMASTER_RPC` are unset. Deploying a
+  business's Kernel v3 smart account and granting its session key both go
+  through a ZeroDev bundler; this needs a signup at dashboard.zerodev.app
+  (free tier exists). Once set, `apps/web`'s onboarding flow can provision a
+  real business end to end.
 - **Bazantic gateway not registered** — needs a bazantic.com account to point
   at the running gateway and load `docs/recipe.bazantic.json`.
 - Pool liquidity is faucet-sized; real sweeps of any size will see
