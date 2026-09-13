@@ -22,11 +22,41 @@ claude mcp add --transport http float-sweep-decision-gateway \
   https://4t6zxrx7r5czjbddgaiqvxigym.bazgateway.com/mcp
 ```
 
-**Remaining, optional:** publish to the Bazantic Marketplace (currently
-unpublished — only callable by this account until then), claim a custom
-handle, and author the Recipe (`02 Recipes` in the dashboard) chaining ENS
-resolve → `checkSweep` → the permissioned swap — see `docs/recipe.bazantic.json`
-for the reference shape.
+## The Recipe
+
+`docs/recipe.bazantic.json` is a real Bazantic Recipe definition (their actual
+schema — `name`/`description`/`input_schema`/`prompt_template`/
+`tool_bindings`, confirmed against `bazantic.com/docs/recipes`), chaining
+`checkSweep` + `getPolicy` into one agent-callable tool.
+
+Fill in `<YOUR_GATEWAY_SLUG>` (both occurrences) — from the dashboard's
+gateway **Overview** tab, or:
+```sh
+baz gateway list --json
+```
+Then:
+```sh
+baz recipe create docs/recipe.bazantic.json   # creates as a draft
+baz recipe publish <handle-it-prints>          # locks it, exposes as one MCP tool
+```
+
+Or skip the file entirely and use the dashboard's **Recipes → New Recipe**
+natural-language composer — paste:
+
+> Given a business's ENS name (like rosa-design.float.eth), call Float's
+> checkSweep tool to determine whether the business should sweep idle USDC
+> into or out of its tokenized-Treasury position and how much. If not
+> allowed (e.g. not KYC-verified), call getPolicy to explain why. Report the
+> decision, direction, recommended amount, and reason in plain language.
+
+It should bind to `checkSweep` and `getPolicy` automatically since they're
+already registered.
+
+## Remaining, optional
+
+Publish the gateway to the Bazantic Marketplace (currently unpublished —
+only callable by this account until then), claim a custom handle, and
+publish the Recipe above.
 
 
 Researched Bazantic's actual registration flow (`bazantic.com/docs/deploy-a-gateway`,

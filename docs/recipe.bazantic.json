@@ -1,60 +1,38 @@
 {
-  "name": "float-sweep-check",
-  "version": "1",
-  "summary": "Decide whether a Float-managed, ENS-named business should sweep idle USDC into (or out of) its tokenized-Treasury position, and how much — then execute the swap through the Uniswap v4 Permissioned Pool.",
-  "inputs": {
-    "ensName": {
-      "type": "string",
-      "description": "The business's ENS name, e.g. rosa-design.float.eth"
-    },
-    "requestedAction": { "type": "string", "enum": ["sweep_in", "sweep_out"], "optional": true },
-    "amount": {
-      "type": "string",
-      "description": "USDC, decimal string. Omit to let Float recommend.",
-      "optional": true
-    }
-  },
-  "steps": [
-    {
-      "id": "resolve",
-      "tool": "ens.resolve",
-      "description": "Resolve {{ensName}} to its resolver + address record.",
-      "with": { "name": "{{ensName}}" }
-    },
-    {
-      "id": "check",
-      "tool": "http.request",
-      "description": "Ask Float's metered endpoint whether the sweep is allowed and for how much.",
-      "payment": { "protocol": "x402", "network": "base-sepolia", "maxAmount": "0.01 USDC" },
-      "with": {
-        "method": "POST",
-        "url": "https://<your-gateway-domain>/v1/check",
-        "headers": { "content-type": "application/json" },
-        "body": {
-          "ensName": "{{ensName}}",
-          "requestedAction": "{{requestedAction}}",
-          "amount": "{{amount}}"
-        }
+  "name": "Float Sweep Check",
+  "description": "Given a Float-managed business's ENS name, ask whether it should sweep idle USDC into or out of its tokenized-Treasury position right now, and how much. Backed by Float's live decision engine — buffer, upcoming obligations, KYC status, and the per-transaction cap all factor in.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "ensName": {
+        "type": "string",
+        "description": "The business's ENS name, e.g. rosa-design.float.eth"
       },
-      "expect": { "status": 200, "jsonPath": "$.allowed" }
-    },
-    {
-      "id": "swap",
-      "when": "{{steps.check.response.allowed}} == true",
-      "tool": "uniswap.swap",
-      "description": "Execute the recommended sweep through the permissioned Universal Router.",
-      "with": {
-        "router": "0x54C707Df83f03bc9cA64ED2CcF9C99B63FD854b7",
-        "poolFee": 3000,
-        "tickSpacing": 60,
-        "direction": "{{steps.check.response.action}}",
-        "amountIn": "{{steps.check.response.recommendedAmount}}",
-        "recipient": "{{steps.resolve.address}}"
+      "requestedAction": {
+        "type": "string",
+        "enum": ["sweep_in", "sweep_out"],
+        "description": "Omit to get Float's own recommendation; set to validate a specific proposed sweep."
+      },
+      "amount": {
+        "type": "string",
+        "description": "USDC, decimal string. Only used with requestedAction."
       }
-    }
-  ],
-  "before_after": {
-    "before": "The agent guesses an amount and either over-sweeps (breaching the working-capital buffer) or under-sweeps (leaving yield on the table); it has no view of the business's KYC status or per-tx cap.",
-    "after": "One paid call returns allowed=true|false, the exact recommendedAmount that respects the buffer + upcoming obligations + the per-transaction cap, and a reason — the swap step just executes it."
-  }
+    },
+    "required": ["ensName"]
+  },
+  "input_example": {
+    "ensName": "rosa-design.float.eth"
+  },
+  "output_example": {
+    "allowed": true,
+    "action": "sweep_in",
+    "recommendedAmount": "3500.00",
+    "reason": "idle balance above the working-capital buffer",
+    "compliance": { "kycStatus": "verified", "verified": true }
+  },
+  "prompt_template": "{{inputs}}\n\nCall checkSweep with this ensName (and requestedAction/amount if given). If checkSweep reports the business isn't found or isn't KYC-verified, call getPolicy first to explain why, then stop. Otherwise report plainly: whether a sweep is allowed, the exact direction and recommended amount, and the one-line reason Float gave.",
+  "tool_bindings": [
+    { "gateway_slug": "<YOUR_GATEWAY_SLUG>", "tool_name": "checkSweep" },
+    { "gateway_slug": "<YOUR_GATEWAY_SLUG>", "tool_name": "getPolicy" }
+  ]
 }
