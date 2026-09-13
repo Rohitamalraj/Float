@@ -43,7 +43,7 @@ export function startBalanceWatcher(
             .add(
               'evaluate',
               { businessId, reason: `usdc-transfer:${l.transactionHash}` },
-              { jobId: `evt:${l.transactionHash}:${l.logIndex}` },
+              { jobId: `evt-${l.transactionHash}-${l.logIndex}` }, // BullMQ rejects ':' in job ids
             )
             .catch((err: unknown) => log.error({ err }, 'enqueue on transfer failed'));
         }
@@ -71,7 +71,7 @@ export function startBalanceWatcher(
         .add(
           'evaluate',
           { businessId, reason: 'interval' },
-          { jobId: `interval:${businessId}:${bucket}` },
+          { jobId: `interval-${businessId}-${bucket}` }, // BullMQ rejects ':' in job ids
         )
         .catch(() => undefined);
     }

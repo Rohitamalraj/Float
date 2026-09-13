@@ -41,7 +41,7 @@ function main(): void {
   const tick = (q: Queue<TickJob>, period: number, name: string) =>
     setInterval(() => {
       void q
-        .add(name, {}, { jobId: `${name}:${Math.floor(Date.now() / period)}` })
+        .add(name, {}, { jobId: `${name}-${Math.floor(Date.now() / period)}` }) // BullMQ rejects ':' in job ids
         .catch((err: unknown) => logger.error({ err }, 'tick enqueue failed'));
     }, period);
   const oracleTick = tick(oracleSyncQueue, ORACLE_TICK_MS, 'oracle-sync');

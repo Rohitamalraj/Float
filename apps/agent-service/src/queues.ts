@@ -1,4 +1,5 @@
 import { Queue, Worker, type ConnectionOptions, type Processor, type WorkerOptions } from 'bullmq';
+import { logger } from './logger.js';
 import type { RedisConnection } from './runtime.js';
 
 // BullMQ reserves ':' as its own Redis-key separator and rejects it in a
@@ -58,15 +59,29 @@ export function makeWorker<T>(
   processor: Processor<T>,
   opts: Partial<WorkerOptions> = {},
 ): Worker<T> {
-  return new Worker<T>(name, processor, { connection, concurrency: 1, ...opts });
+  const worker = new Worker<T>(name, processor, { connection, concurrency: 1, ...opts });
+  // A thrown processor error otherwise only ever surfaces as a 'failed' job in
+  // Redis — nothing else in this service logs it. Without this, a worker can
+  // fail every tick, forever, with zero visible trace (see docs/runbook.md §7).
+  worker.on('failed', (job, err) => {
+    logger.error({ queue: name, jobId: job?.id, attemptsMade: job?.attemptsMade, err }, 'job failed');
+  });
+  worker.on('error', (err) => {
+    logger.error({ queue: name, err }, 'worker error');
+  });
+  return worker;
 }
 
-/** `<businessId>:<direction>:<hour-bucket>` — one sweep per business per direction per hour. */
+/**
+ * `<businessId>-<direction>-<hour-bucket>` — one sweep per business per
+ * direction per hour. Used as both the `sweeps.idempotency_key` column and a
+ * BullMQ job id — BullMQ rejects `:` in custom job ids, same as queue names.
+ */
 export function sweepIdempotencyKey(
   businessId: string,
   direction: 'in' | 'out',
   windowStartMs: number,
 ): string {
   const bucket = Math.floor(windowStartMs / 3600_000);
-  return `${businessId}:${direction}:${bucket}`;
+  return `${businessId}-${direction}-${bucket}`;
 }
