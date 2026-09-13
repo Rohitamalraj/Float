@@ -95,16 +95,64 @@ Attached via `apps/agent-service/src/scripts/register-ens-parent.ts`
 (`planBusinessProvisioning`, driven by `apps/web`'s onboarding flow) can now
 mint real subnames — `<label>.float.eth` — under this subregistry.
 
+### First real business — provisioned and Layer-1-verified end to end
+
+`acme-labs.float.eth` is a real, fully-provisioned business on this
+deployment — proof the entire pipeline works, not just its pieces in
+isolation:
+
+| Item | Value |
+|---|---|
+| ENS name | `acme-labs.float.eth` |
+| Smart account (ZeroDev Kernel v3) | `0xFfa77d7d281f417b77f5437b034b809e2a49C56F` |
+| Compliance | `verified` on-chain (`FloatComplianceRegistry.isVerified` = true) |
+| Policy | buffer 2 USDC, max-sweep 5 USDC — mirrored on `FloatPolicyView` |
+| Session key | `active`, granted via a real ZeroDev bundler (EntryPoint 0.7) |
+
+Provisioned by `apps/agent-service/src/scripts/provision-test-business.ts`
+(`pnpm --filter @float/agent-service provision-test-business -- --label
+<name>`, `--resume <label>` to continue a partially-completed run) — it
+bootstraps identity the way `apps/web`'s onboarding API would, then performs
+the on-chain provisioning that API doesn't yet trigger (ENS subname/resolver,
+Kernel account, session-key grant), then lets the *running* agent-service's
+oracle-sync/policy-sync workers do their normal job.
+
+**Layer 1 verified against this real business**: `attack:out-of-policy`
+(`docs/security-model.md`) run against it — all 9 adversarial UserOperations
+rejected by the real ZeroDev `toCallPolicy` validator on a real Sepolia smart
+account, zero state change. This is the strongest evidence the project has
+that Float's core security claim holds: not a fork test, not a mock — a real
+Kernel v3 account, a real bundler, real cryptographic rejection.
+
+### Bugs this run found and fixed
+
+Every one of these was invisible until the pipeline actually ran against
+live infrastructure for the first time:
+
+1. **BullMQ rejects `:` in queue names** — `float:evaluate` etc. → renamed to
+   `float-evaluate` style (`apps/agent-service/src/queues.ts`).
+2. **BullMQ also rejects `:` in custom job ids** — the interval-tick ids in
+   `index.ts` and `watchers/balance-watcher.ts` used the same separator;
+   renamed the same way.
+3. **Worker failures were completely silent** — no code anywhere listened
+   for BullMQ's `'failed'`/`'error'` events, so a worker could fail every
+   tick, forever, with zero trace in the logs. This is exactly how the
+   `policy-sync` failures below went unnoticed for several minutes. Fixed in
+   `makeWorker` (`queues.ts`) — every worker now logs `job failed` /
+   `worker error` with the reason.
+4. **The `POLICY_SYNC_PRIVATE_KEY` operational address had no Sepolia ETH** —
+   not a code bug, an operational gap the new failed-job logging (above)
+   would have caught immediately instead of a silent multi-minute stall.
+
 ### Not yet done
 
-- **No business is provisioned.** The ENS side is ready (above). What's still
-  missing is **a ZeroDev project** — `ZERODEV_PROJECT_ID` /
-  `ZERODEV_BUNDLER_RPC` / `ZERODEV_PAYMASTER_RPC` are unset. Deploying a
-  business's Kernel v3 smart account and granting its session key both go
-  through a ZeroDev bundler; this needs a signup at dashboard.zerodev.app
-  (free tier exists). Once set, `apps/web`'s onboarding flow can provision a
-  real business end to end.
 - **Bazantic gateway not registered** — needs a bazantic.com account to point
   at the running gateway and load `docs/recipe.bazantic.json`.
 - Pool liquidity is faucet-sized; real sweeps of any size will see
   meaningful slippage until it's deepened.
+- `apps/web`'s onboarding flow still doesn't itself trigger ENS/smart-account/
+  session-key provisioning — `provision-test-business.ts` does it as an
+  operational script. Wiring this into the product (a provisioning worker
+  watching `businesses.status = 'onboarding'`, and a session-key-grant UI in
+  `apps/web/settings`) is real remaining product work, not a blocker to
+  further testing.

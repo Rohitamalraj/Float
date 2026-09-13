@@ -157,11 +157,20 @@ Float is now feature-complete across all 6 planned phases. What remains is **ope
 code**: provisioning `float.eth`, funding `FloatYieldReserve` further, standing up Postgres/Redis
 + the two services, and registering the Bazantic gateway — see `docs/runbook.md`.
 
-## ✅ Sepolia deployment (live)
+## ✅ Sepolia deployment (live) — first real business provisioned, Layer 1 verified
 
 `DeployCore` → `FloatYieldReserve.acceptOwnership()` → `DeployVenue` → `SeedLiquidity`, all
-broadcast successfully. Full addresses, roles, and current state in `docs/deployments.md`.
-FloatSweepExecutor is verified in the compliance registry; the FloatUSTB/USDC pool is initialized
-and holds one seeded position. Pool liquidity is faucet-sized (8 USDC) — enough to prove the
-pipeline, not production depth. No business provisioned yet; the three Node services aren't
-running against this deployment yet.
+broadcast successfully. `float.eth` registered for real on the ENS v2 beta (commit-reveal, paid
+in USDC — no manual ENS-app step needed) and given a subregistry. All three Node services
+(agent-service, gateway, web) running against Postgres/Redis and this deployment.
+
+**`acme-labs.float.eth`** is a real provisioned business: ZeroDev Kernel v3 smart account, ENS
+subname + role-split resolver, on-chain compliance attestation (oracle-sync), policy mirror
+(policy-sync), and a granted agent session key — all against live Sepolia, all through a real
+ZeroDev bundler. `attack:out-of-policy` run against it: **all 9 adversarial UserOperations
+cryptographically rejected, zero state change** — the strongest validation yet of Float's core
+security claim. Full details, and four real bugs this exercise found and fixed (two BullMQ `:`
+issues, silent worker-failure logging, an unfunded operational key), in `docs/deployments.md`.
+
+Full addresses, roles, and current state in `docs/deployments.md`. Pool liquidity is
+faucet-sized (8 USDC) — enough to prove the pipeline, not production depth.
