@@ -15,7 +15,14 @@ test.describe('onboarding', () => {
     await installMockWallet(context);
     await page.goto('/login');
 
-    await page.getByRole('button', { name: /connect wallet/i }).click();
+    // The mock wallet always answers eth_accounts, so wagmi's injected
+    // connector may auto-reconnect on load without needing an explicit
+    // click (exactly like a real extension that's already authorized this
+    // site) — only click "Connect wallet" if that state hasn't happened yet.
+    const connectBtn = page.getByRole('button', { name: /connect wallet/i });
+    if (await connectBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await connectBtn.click();
+    }
     await expect(page.getByText(testAccount.address, { exact: false })).toBeVisible();
 
     await page.getByRole('button', { name: /sign in with ethereum/i }).click();

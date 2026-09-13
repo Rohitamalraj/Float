@@ -2,9 +2,9 @@ import type { BrowserContext } from '@playwright/test';
 import { privateKeyToAccount } from 'viem/accounts';
 import type { Hex } from 'viem';
 
-/** Well-known Anvil/Hardhat test key #1 — never used on a real chain. */
+/** Well-known Anvil/Hardhat default test key #0 — never used on a real chain. */
 export const TEST_PRIVATE_KEY: Hex =
-  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690';
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 export const testAccount = privateKeyToAccount(TEST_PRIVATE_KEY);
 
 /**
