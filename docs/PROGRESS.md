@@ -174,3 +174,12 @@ issues, silent worker-failure logging, an unfunded operational key), in `docs/de
 
 Full addresses, roles, and current state in `docs/deployments.md`. Pool liquidity is
 faucet-sized (8 USDC) — enough to prove the pipeline, not production depth.
+
+**Closed the onboarding gap this uncovered**: `apps/web`'s onboarding previously only wrote DB
+rows. Added a `provision` worker (agent-service) that auto-provisions ENS + the smart account the
+moment a business signs up, and a real "Grant agent access" flow in Settings where the owner
+signs with their own connected wallet (`@float/wallet/client`, browser-safe). Both verified live
+end to end against the real HTTP API — a business created via real SIWE + `POST /api/business`
+was auto-provisioned within seconds and then had a session key granted and persisted, matching
+the same code path a live wallet extension would drive. Fixed a real Turbopack/bundling bug this
+surfaced along the way (`@float/wallet`'s root barrel pulled `node:fs` into the client bundle).

@@ -55,8 +55,13 @@ export interface AgentRuntime {
   ensDeployment?: EnsDeployment;
   venue: FloatVenue;
   wallet: WalletRuntimeConfig;
-  signers: { oracle: FloatSigner; policySync: FloatSigner; agentSession: FloatSigner };
-  walletClients: { oracle: WalletClient; policySync: WalletClient };
+  signers: {
+    oracle: FloatSigner;
+    policySync: FloatSigner;
+    agentSession: FloatSigner;
+    provisioner: FloatSigner;
+  };
+  walletClients: { oracle: WalletClient; policySync: WalletClient; provisioner: WalletClient };
   params: AgentParams;
 }
 
@@ -104,11 +109,16 @@ export function getRuntime(): AgentRuntime {
       'agent-session',
       key('AGENT_SESSION_SIGNER_PRIVATE_KEY', 'sign sweep UserOperations'),
     ),
+    provisioner: envSigner(
+      'provisioner',
+      key('ENS_PROVISIONER_PRIVATE_KEY', 'provision ENS subnames for new businesses'),
+    ),
   };
 
   const walletClients = {
     oracle: createWalletClient({ account: signers.oracle.account, chain, transport }),
     policySync: createWalletClient({ account: signers.policySync.account, chain, transport }),
+    provisioner: createWalletClient({ account: signers.provisioner.account, chain, transport }),
   };
 
   cached = {

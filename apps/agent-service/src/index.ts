@@ -11,9 +11,11 @@ import { startEvaluateWorker } from './workers/evaluate.js';
 import { startExecuteWorker } from './workers/execute.js';
 import { startOracleSyncWorker } from './workers/oracle-sync.js';
 import { startPolicySyncWorker } from './workers/policy-sync.js';
+import { startProvisionWorker } from './workers/provision.js';
 
 const ORACLE_TICK_MS = 30_000;
 const POLICY_TICK_MS = 60_000;
+const PROVISION_TICK_MS = 20_000;
 
 function main(): void {
   const rt = getRuntime();
@@ -23,11 +25,13 @@ function main(): void {
   const executeQueue = makeQueue<ExecuteJob>(QUEUE.execute, conn);
   const oracleSyncQueue = makeQueue<TickJob>(QUEUE.oracleSync, conn);
   const policySyncQueue = makeQueue<TickJob>(QUEUE.policySync, conn);
+  const provisionQueue = makeQueue<TickJob>(QUEUE.provision, conn);
   const allQueues: Record<string, Queue> = {
     evaluate: evaluateQueue,
     execute: executeQueue,
     oracleSync: oracleSyncQueue,
     policySync: policySyncQueue,
+    provision: provisionQueue,
   };
 
   const workers = [
@@ -35,6 +39,7 @@ function main(): void {
     startExecuteWorker(rt),
     startOracleSyncWorker(rt),
     startPolicySyncWorker(rt),
+    startProvisionWorker(rt),
   ];
   const stopWatcher = startBalanceWatcher(rt, evaluateQueue);
 
@@ -46,6 +51,7 @@ function main(): void {
     }, period);
   const oracleTick = tick(oracleSyncQueue, ORACLE_TICK_MS, 'oracle-sync');
   const policyTick = tick(policySyncQueue, POLICY_TICK_MS, 'policy-sync');
+  const provisionTick = tick(provisionQueue, PROVISION_TICK_MS, 'provision');
 
   let ready = true;
   const health = startHealthServer({
@@ -71,6 +77,7 @@ function main(): void {
     logger.info({ sig }, 'shutting down');
     clearInterval(oracleTick);
     clearInterval(policyTick);
+    clearInterval(provisionTick);
     stopWatcher();
     await Promise.allSettled(workers.map((w) => w.close()));
     await Promise.allSettled(Object.values(allQueues).map((q) => q.close()));

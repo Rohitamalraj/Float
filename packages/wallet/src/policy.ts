@@ -1,6 +1,11 @@
 import { CallPolicyVersion, ParamCondition, toCallPolicy } from '@zerodev/permissions/policies';
 import type { Policy } from '@zerodev/permissions';
-import { erc20Abi, floatSweepExecutorAbi, type FloatDeployment } from '@float/contracts-sdk';
+import type { FloatDeployment } from '@float/contracts-sdk';
+// ABIs from the '/abis' subpath, not the package root — the root barrel also
+// re-exports address-resolution code that touches `node:fs` (env/.env
+// discovery), which a client (browser) bundle must never pull in. This file
+// is reachable from apps/web's client-side session-key grant flow.
+import { erc20Abi, floatSweepExecutorAbi } from '@float/contracts-sdk/abis';
 import type { Address } from 'viem';
 
 export interface AgentPolicyParams {

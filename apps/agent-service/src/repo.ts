@@ -40,6 +40,29 @@ export async function getBusinessBySmartAccount(
   return row;
 }
 
+/** Onboarded businesses that still need their ENS subname + smart account. */
+export async function businessesAwaitingProvisioning(db: Database): Promise<Business[]> {
+  return db
+    .select()
+    .from(businesses)
+    .where(and(eq(businesses.status, 'onboarding'), isNull(businesses.smartAccountAddress)));
+}
+
+export async function markBusinessProvisioned(
+  db: Database,
+  businessId: string,
+  patch: { smartAccountAddress: string; ensResolver: string },
+): Promise<void> {
+  await db
+    .update(businesses)
+    .set({
+      smartAccountAddress: patch.smartAccountAddress.toLowerCase(),
+      ensResolver: patch.ensResolver,
+      updatedAt: new Date(),
+    })
+    .where(eq(businesses.id, businessId));
+}
+
 export async function getActiveSessionKey(
   db: Database,
   businessId: string,

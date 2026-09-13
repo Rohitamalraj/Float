@@ -130,8 +130,9 @@ async function main(): Promise<void> {
     log.info({ businessId: bizId, reviewId: review!.id }, 'business + compliance rows created');
 
     // ── 2. ENS: mint the subname, split policy/compliance record roles, set initial policy ──
-    smartAccount = (await getBusinessAccount({ publicClient: rt.publicClient, ownerAccount: owner }))
-      .address;
+    smartAccount = (
+      await getBusinessAccount({ publicClient: rt.publicClient, ownerAccount: owner, runtime: rt.wallet })
+    ).address;
     const subregistry = await getSubregistry(rt.publicClient, rt.ensDeployment.registry, 'float');
     if (getAddress(subregistry) === zeroAddress) {
       throw new Error('float.eth has no subregistry — run register-ens-parent first');

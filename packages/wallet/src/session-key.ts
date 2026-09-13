@@ -15,27 +15,38 @@ import {
 } from '@zerodev/sdk';
 import {
   http,
+  type Account,
   type Address,
   type Chain,
   type LocalAccount,
   type PublicClient,
   type Transport,
+  type WalletClient,
 } from 'viem';
 import type { FloatDeployment } from '@float/contracts-sdk';
-import { walletRuntimeConfig, type WalletRuntimeConfig } from './config.js';
+import type { WalletRuntimeConfig } from './config.js';
 import { agentPolicySnapshot, buildAgentCallPolicy, type AgentPolicySnapshot } from './policy.js';
+
+/**
+ * A Node-side test/service key, or a browser wallet's `WalletClient` (e.g.
+ * wagmi's `useWalletClient()`) — ZeroDev's validator construction accepts
+ * either directly. Float never holds a business owner's actual key, so the
+ * owner-signed flows (grant, revoke) run client-side against a `WalletClient`
+ * in the real product; `LocalAccount` exists for scripts and tests.
+ */
+export type OwnerSigner = LocalAccount | WalletClient<Transport, Chain | undefined, Account>;
 
 export interface GrantSessionKeyParams {
   publicClient: PublicClient;
   /** The business owner signer (root/sudo of the smart account). */
-  ownerAccount: LocalAccount;
+  ownerAccount: OwnerSigner;
   /** Address of the agent's session key (the agent service holds the private key). */
   agentSignerAddress: Address;
   deployment: FloatDeployment;
   maxSweepPerTx: bigint;
   /** Unix seconds after which the key auto-expires. Omit for no expiry. */
   validUntil?: number;
-  runtime?: WalletRuntimeConfig;
+  runtime: WalletRuntimeConfig;
 }
 
 export interface GrantedSessionKey {
@@ -55,7 +66,7 @@ export interface GrantedSessionKey {
 export async function grantAgentSessionKey(
   params: GrantSessionKeyParams,
 ): Promise<GrantedSessionKey> {
-  const rt = params.runtime ?? walletRuntimeConfig();
+  const rt = params.runtime;
   const { publicClient, ownerAccount } = params;
 
   const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
@@ -112,7 +123,7 @@ export interface RestoreSessionKeyParams {
   bundlerTransport: Transport;
   /** Optional paymaster for sponsored gas. */
   paymaster?: Parameters<typeof createKernelAccountClient>[0]['paymaster'];
-  runtime?: WalletRuntimeConfig;
+  runtime: WalletRuntimeConfig;
 }
 
 /**
@@ -122,7 +133,7 @@ export interface RestoreSessionKeyParams {
 export async function restoreSessionKeyClient(
   params: RestoreSessionKeyParams,
 ): Promise<KernelAccountClient> {
-  const rt = params.runtime ?? walletRuntimeConfig();
+  const rt = params.runtime;
   const sessionKeySigner = await toECDSASigner({ signer: params.agentSigner });
 
   const sessionKeyAccount = await deserializePermissionAccount(
@@ -145,14 +156,14 @@ export async function restoreSessionKeyClient(
 export interface RevokeSessionKeyParams {
   publicClient: PublicClient;
   chain: Chain;
-  ownerAccount: LocalAccount;
+  ownerAccount: OwnerSigner;
   agentSignerAddress: Address;
   deployment: FloatDeployment;
   maxSweepPerTx: bigint;
   validUntil?: number;
   bundlerTransport: Transport;
   paymaster?: Parameters<typeof createKernelAccountClient>[0]['paymaster'];
-  runtime?: WalletRuntimeConfig;
+  runtime: WalletRuntimeConfig;
 }
 
 /**
@@ -162,7 +173,7 @@ export interface RevokeSessionKeyParams {
 export async function revokeAgentSessionKey(
   params: RevokeSessionKeyParams,
 ): Promise<{ userOpHash: `0x${string}` }> {
-  const rt = params.runtime ?? walletRuntimeConfig();
+  const rt = params.runtime;
 
   const ecdsaValidator = await signerToEcdsaValidator(params.publicClient, {
     entryPoint: rt.entryPoint,
@@ -205,9 +216,7 @@ export async function revokeAgentSessionKey(
 }
 
 /** Convenience: an http bundler transport from the runtime config. */
-export function bundlerTransportFromRuntime(
-  rt: WalletRuntimeConfig = walletRuntimeConfig(),
-): Transport {
+export function bundlerTransportFromRuntime(rt: WalletRuntimeConfig): Transport {
   if (!rt.bundlerRpc) throw new Error('ZERODEV_BUNDLER_RPC is not set');
   return http(rt.bundlerRpc);
 }

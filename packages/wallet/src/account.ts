@@ -1,12 +1,13 @@
 import { signerToEcdsaValidator } from '@zerodev/ecdsa-validator';
 import {
+  addressToEmptyAccount,
   createKernelAccount,
   createKernelAccountClient,
   type CreateKernelAccountReturnType,
   type KernelAccountClient,
 } from '@zerodev/sdk';
-import type { Chain, LocalAccount, PublicClient, Transport } from 'viem';
-import { walletRuntimeConfig, type WalletRuntimeConfig } from './config.js';
+import type { Address, Chain, LocalAccount, PublicClient, Transport } from 'viem';
+import type { WalletRuntimeConfig } from './config.js';
 
 export interface BusinessAccountParams {
   publicClient: PublicClient;
@@ -14,7 +15,7 @@ export interface BusinessAccountParams {
   ownerAccount: LocalAccount;
   /** Deterministic account index — use 0 unless a business needs multiple wallets. */
   index?: bigint;
-  runtime?: WalletRuntimeConfig;
+  runtime: WalletRuntimeConfig;
 }
 
 /**
@@ -25,7 +26,7 @@ export interface BusinessAccountParams {
 export async function getBusinessAccount(
   params: BusinessAccountParams,
 ): Promise<CreateKernelAccountReturnType> {
-  const rt = params.runtime ?? walletRuntimeConfig();
+  const rt = params.runtime;
   const ecdsaValidator = await signerToEcdsaValidator(params.publicClient, {
     entryPoint: rt.entryPoint,
     kernelVersion: rt.kernelVersion,
@@ -37,6 +38,31 @@ export async function getBusinessAccount(
     index: params.index ?? 0n,
     plugins: { sudo: ecdsaValidator },
   });
+}
+
+export interface PredictBusinessAccountParams {
+  publicClient: PublicClient;
+  /** Address of the owner key that will control the account — no signature needed. */
+  ownerKeyAddress: Address;
+  index?: bigint;
+  runtime: WalletRuntimeConfig;
+}
+
+/**
+ * The deterministic smart account address for an owner key, before that
+ * owner has signed anything. Used to auto-provision ENS + the account record
+ * as soon as a business names its owner key, ahead of any owner action.
+ */
+export async function predictBusinessAccountAddress(
+  params: PredictBusinessAccountParams,
+): Promise<Address> {
+  const account = await getBusinessAccount({
+    publicClient: params.publicClient,
+    ownerAccount: addressToEmptyAccount(params.ownerKeyAddress),
+    index: params.index,
+    runtime: params.runtime,
+  });
+  return account.address;
 }
 
 export interface BusinessKernelClientParams extends BusinessAccountParams {

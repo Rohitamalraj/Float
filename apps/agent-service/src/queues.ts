@@ -9,6 +9,7 @@ export const QUEUE = {
   execute: 'float-execute',
   oracleSync: 'float-oracle-sync',
   policySync: 'float-policy-sync',
+  provision: 'float-provision',
 } as const;
 
 export type QueueName = (typeof QUEUE)[keyof typeof QUEUE];

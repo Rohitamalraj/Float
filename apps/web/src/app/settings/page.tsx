@@ -2,10 +2,18 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSendTransaction } from 'wagmi';
-import type { Hex } from 'viem';
+import { useAccount, usePublicClient, useSendTransaction, useWalletClient } from 'wagmi';
+import { parseUnits, type Hex } from 'viem';
+import type { FloatDeployment } from '@float/contracts-sdk';
+import { clientWalletRuntimeConfig, grantAgentSessionKey } from '@float/wallet/client';
 import { api, useInvalidate, useMe } from '@/lib/client';
 import { usd, when } from '@/lib/format';
+
+interface GrantInfo {
+  smartAccountAddress: string;
+  agentSignerAddress: string;
+  deployment: FloatDeployment;
+}
 
 interface Obligation {
   id: string;
@@ -20,6 +28,9 @@ export default function Settings() {
   const { data: me } = useMe();
   const invalidate = useInvalidate();
   const { sendTransactionAsync } = useSendTransaction();
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   const policy = useQuery({
     queryKey: ['policy'],
@@ -39,10 +50,74 @@ export default function Settings() {
         '/api/business/session-key',
       ),
   });
+  const grantInfo = useQuery({
+    queryKey: ['grant-info'],
+    queryFn: () => api<GrantInfo>('/api/business/grant-info'),
+    retry: false,
+  });
 
   const [buffer, setBuffer] = useState('');
   const [msg, setMsg] = useState<string>();
   const [err, setErr] = useState<string>();
+
+  const [cap, setCap] = useState('');
+  const [granting, setGranting] = useState(false);
+  const [grantMsg, setGrantMsg] = useState<string>();
+  const [grantErr, setGrantErr] = useState<string>();
+
+  async function grantKey() {
+    setGrantErr(undefined);
+    setGrantMsg(undefined);
+    if (!walletClient || !address) {
+      setGrantErr('connect your wallet first');
+      return;
+    }
+    if (!publicClient) {
+      setGrantErr('no chain connection');
+      return;
+    }
+    if (!grantInfo.data) {
+      setGrantErr('grant info not loaded');
+      return;
+    }
+    setGranting(true);
+    try {
+      const runtime = clientWalletRuntimeConfig();
+      const granted = await grantAgentSessionKey({
+        publicClient,
+        ownerAccount: walletClient,
+        agentSignerAddress: grantInfo.data.agentSignerAddress as Hex,
+        deployment: grantInfo.data.deployment,
+        maxSweepPerTx: parseUnits(cap, 6),
+        runtime,
+      });
+      await api('/api/business/session-key', {
+        method: 'POST',
+        body: JSON.stringify({
+          agentKeyAddress: granted.agentSignerAddress,
+          serializedApproval: granted.serializedApproval,
+          policySnapshot: {
+            maxSweepPerTx: granted.policySnapshot.maxSweepPerTx,
+            executor: granted.policySnapshot.executor,
+            usdc: granted.policySnapshot.usdc,
+            allowedTargets: [
+              granted.policySnapshot.executor,
+              granted.policySnapshot.usdc,
+              granted.policySnapshot.floatUstb,
+            ],
+            kernelVersion: runtime.kernelVersion,
+            entryPoint: runtime.entryPoint.address,
+          },
+        }),
+      });
+      setGrantMsg('Agent access granted — the agent can now sweep in/out within the cap.');
+      invalidate('session-key', 'business');
+    } catch (e) {
+      setGrantErr(e instanceof Error ? e.message : 'grant failed');
+    } finally {
+      setGranting(false);
+    }
+  }
 
   async function saveBuffer() {
     setErr(undefined);
@@ -199,8 +274,35 @@ export default function Settings() {
               Revoke
             </button>
           </div>
+        ) : grantInfo.isError ? (
+          <p className="muted">
+            Your account is still being provisioned on-chain — this can take up to a minute after
+            signing up. Refresh shortly.
+          </p>
         ) : (
-          <p className="muted">No active session key. The agent is not operating this wallet.</p>
+          <div className="stack">
+            <p className="muted">
+              No active session key. Grant one to let Float&rsquo;s agent sweep in/out on your
+              behalf — bounded to the exact cap below and nothing else. You sign this with your own
+              wallet; Float never holds your key.
+            </p>
+            <div className="row" style={{ maxWidth: 340 }}>
+              <input
+                placeholder="Max per-sweep cap, USDC (e.g. 5000)"
+                value={cap}
+                onChange={(e) => setCap(e.target.value)}
+              />
+              <button
+                className="btn primary"
+                disabled={!cap || granting || !grantInfo.data}
+                onClick={() => void grantKey()}
+              >
+                {granting ? 'Granting…' : 'Grant agent access'}
+              </button>
+            </div>
+            {grantMsg && <p className="ok">{grantMsg}</p>}
+            {grantErr && <p className="err">{grantErr}</p>}
+          </div>
         )}
       </div>
     </div>

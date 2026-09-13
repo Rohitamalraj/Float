@@ -144,15 +144,41 @@ live infrastructure for the first time:
    not a code bug, an operational gap the new failed-job logging (above)
    would have caught immediately instead of a silent multi-minute stall.
 
+### Onboarding gap closed: real businesses now self-provision
+
+The gap flagged above is fixed — `apps/web`'s onboarding flow now results in a
+fully working business with zero manual scripts:
+
+- **`apps/agent-service/src/workers/provision.ts`** — a new worker (20s tick)
+  watches `businesses.status = 'onboarding' AND smart_account_address IS
+  NULL`, computes each one's Kernel v3 smart account address (deterministic
+  from the owner's address — no signature needed), and runs the
+  provisioner-signed ENS steps (resolver deploy, subname register, addr +
+  role-split). Verified live: created a business via a real SIWE + `POST
+  /api/business` call and watched it get a smart account + resolver
+  automatically within seconds, with the on-chain `addr()` record confirmed
+  pointing at the right address — no script run by hand.
+- **`apps/web`'s Settings page** — a new "Grant agent access" action. The
+  owner picks a cap and signs with their *own connected wallet*
+  (`@float/wallet/client`'s `grantAgentSessionKey`, browser-safe — Float never
+  touches this key); the result posts to the existing `POST
+  /api/business/session-key` route. Verified live end to end against the real
+  API: sign in → fetch grant info → grant client-side → persist — `201` with
+  `status: "active"`, smart account address matching the provisioning
+  worker's prediction exactly.
+- This surfaced a real bundling bug: importing anything from `@float/wallet`'s
+  root barrel pulled `@float/config`'s `loadEnv()` (`node:fs`) into the
+  browser bundle and crashed Turbopack. Fixed by adding a genuine `@float/wallet/client`
+  subpath export containing only browser-safe code, and making `runtime` a
+  required (not env-defaulted) parameter on the owner-signed functions.
+
 ### Not yet done
 
 - **Bazantic gateway not registered** — needs a bazantic.com account to point
   at the running gateway and load `docs/recipe.bazantic.json`.
 - Pool liquidity is faucet-sized; real sweeps of any size will see
   meaningful slippage until it's deepened.
-- `apps/web`'s onboarding flow still doesn't itself trigger ENS/smart-account/
-  session-key provisioning — `provision-test-business.ts` does it as an
-  operational script. Wiring this into the product (a provisioning worker
-  watching `businesses.status = 'onboarding'`, and a session-key-grant UI in
-  `apps/web/settings`) is real remaining product work, not a blocker to
-  further testing.
+- The owner-signed **initial policy** (buffer/cap ENS records) still happens
+  via the existing Settings buffer editor after the account is provisioned,
+  not during onboarding itself — matches the design (Float never holds the
+  owner key, so anything owner-signed happens in the browser).
