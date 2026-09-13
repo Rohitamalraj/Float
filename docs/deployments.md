@@ -28,7 +28,8 @@ All verifiable on [Sepolia Etherscan](https://sepolia.etherscan.io).
 
 | Role | Address | Notes |
 |---|---|---|
-| Deployer / `DEFAULT_ADMIN_ROLE` / `Ownable` admin / liquidity manager | `0xaa63e17e261f47dc6c542e7a5C7CafFDDC39248a` | One key wears all three hats for this initial deploy — see `docs/runbook.md` §1 for splitting them out (Safe multisig target). Also the LP that seeded the pool, since `FloatAllowlistChecker` only grants `LIQUIDITY_ALLOWED` to the address it was constructed with. |
+| Deployer / liquidity manager | `0xaa63e17e261f47dc6c542e7a5C7CafFDDC39248a` | Still holds the LP-manager role (`FloatAllowlistChecker` grants `LIQUIDITY_ALLOWED` to the address it was constructed with) and does the day-to-day broadcasting for operational scripts. **No longer** holds `DEFAULT_ADMIN_ROLE` or `Ownable` admin on any contract — see the Safe row below. |
+| **Admin Safe (2-of-2)** — `Ownable2Step` owner on `FloatUSTB`/`FloatYieldReserve`, `DEFAULT_ADMIN_ROLE` on `FloatComplianceRegistry`/`FloatPolicyView` | `0x1a2680EF60Aa45B7360Dd78b0C8A9f918AcdD505` | Real Safe multisig, owners = the deployer key above + the project owner's own wallet. Neither key alone can act — `docs/runbook.md` §1, `docs/security-review.md`. |
 | `COMPLIANCE_ORACLE_ROLE` | `0x31BdadeC6F1DA6051B17f2671046c14d62D3Ab1f` | Signed the one attestation verifying `FloatSweepExecutor` as a swapper. |
 | `POLICY_SYNC_ROLE` | `0x68DE797D86aaA7BF5ca8F1cFBFDFae338FC88a44` | Not yet exercised — no business provisioned yet. |
 | Treasury (spread recipient) | `0x9A6da7956D1a8aF77Eb1097a0Ed1eF3C515B07E2` | Receive-only; no operations performed by this key. |

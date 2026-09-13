@@ -120,11 +120,11 @@ during this review; the exclusion comment in `foundry.toml` is unchanged.
   business owners cannot reach the KYC-review or cross-tenant-overview
   endpoints. Reviewed as part of this pass — no gap found.
 
-## Key custody (unchanged from `docs/security-model.md`, restated for this review)
+## Key custody (updated 2026-09-13 — the admin key is now a Safe multisig, live)
 
 | Key | Now | Target | Blast radius if compromised |
 |---|---|---|---|
-| Deployer / Float admin (`Ownable2Step` on `FloatUSTB`, `FloatYieldReserve`; `DEFAULT_ADMIN_ROLE` on the two `AccessControl` contracts) | env / EOA | Safe multisig | Can change yield/spread params, drain the Float-funded reserve, or re-point roles. **Cannot** touch a business's own funds — those never sit in a Float-owned contract. |
+| Deployer / Float admin (`Ownable2Step` on `FloatUSTB`, `FloatYieldReserve`; `DEFAULT_ADMIN_ROLE` on the two `AccessControl` contracts) | **✅ Rotated** — 2-of-2 Safe (`0x1a2680EF60Aa45B7360Dd78b0C8A9f918AcdD505`, Sepolia): the original deployer key + the project owner's real wallet. The former sole admin key can no longer act alone — verified: `hasRole(DEFAULT_ADMIN_ROLE, deployer)` is `false` on both `AccessControl` contracts, `owner()` on both `Ownable2Step` contracts is the Safe. | — (done) | Compromising the deployer key alone now does nothing — the Safe requires the second owner's signature too. Can still change yield/spread params or drain the Float-funded reserve, but only with both keys. **Cannot** touch a business's own funds — those never sit in a Float-owned contract. |
 | Compliance oracle | env, in `apps/agent-service` | KMS / HSM | Can falsely attest or revoke KYC — gates pool access and Layer-1-independent; cannot move funds. |
 | Policy-sync | env, in `apps/agent-service` | KMS | Can desync the on-chain policy mirror; `FloatPolicyView` is defense in depth, not the ceiling — Layer 1 still caps the agent. |
 | Agent session signer | env, in `apps/agent-service` | KMS, per-tenant isolation | Bounded to `sweepIn`/`sweepOut`/`approve` on the fixed pair, capped at `maxSweepPerTx`, per the Layer 1 call policy — see `docs/security-model.md`. |

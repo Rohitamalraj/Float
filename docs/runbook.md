@@ -27,10 +27,17 @@ Applies to the compliance-oracle, policy-sync, and agent-session keys (all
    Confirm `/health` and one full evaluate→execute cycle before decommissioning
    the old key material.
 5. **Deployer / Float admin** (`Ownable2Step` on `FloatUSTB` /
-   `FloatYieldReserve`, `DEFAULT_ADMIN_ROLE` elsewhere): `Ownable2Step`
-   requires the new owner to `acceptOwnership()` — call `transferOwnership`
-   from the current key, then `acceptOwnership` from the new one. This is the
-   key targeted for a Safe multisig migration (`docs/security-review.md`).
+   `FloatYieldReserve`, `DEFAULT_ADMIN_ROLE` elsewhere): **done** — this key is
+   now a 2-of-2 Safe multisig (`docs/security-review.md`), not a single EOA.
+   `contracts/../apps/agent-service/src/scripts/rotate-admin-to-safe.ts` is
+   the script that performed the handover (`ROTATE_CONFIRM=1
+   SAFE_OWNER_ADDRESS=0x... pnpm --filter @float/agent-service
+   rotate-admin-to-safe`) — idempotent, safe to re-run if it's ever
+   interrupted partway. To swap out a Safe owner later (lost device, team
+   change), that's a normal Safe operation (`swapOwner`/`addOwnerWithThreshold`
+   via app.safe.global or `Safe.createSwapOwnerTx`), executed as a Safe
+   transaction co-signed by the remaining owner(s) — never a raw
+   `transferOwnership` call again.
 
 Rotation never touches a business owner's own key — Float never holds it.
 

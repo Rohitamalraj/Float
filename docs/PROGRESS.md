@@ -208,3 +208,15 @@ Float is now one callable MCP tool for any agent on Bazantic. Remaining is pure 
 This closes the last item on the original plan — **all 6 phases plus hardening are done, the
 product is deployed on live Sepolia end to end, and it's now reachable by any agent through
 Bazantic.**
+
+## ✅ Admin key rotated to a real Safe multisig
+
+The one throwaway EOA holding `Ownable2Step` ownership on `FloatUSTB`/`FloatYieldReserve` and
+`DEFAULT_ADMIN_ROLE` on `FloatComplianceRegistry`/`FloatPolicyView` is retired from that role.
+`apps/agent-service/src/scripts/rotate-admin-to-safe.ts` deployed a real 2-of-2 Gnosis Safe
+(`0x1a2680EF60Aa45B7360Dd78b0C8A9f918AcdD505`, owners = the deployer key + the project owner's
+own wallet) using `@safe-global/protocol-kit`, moved every admin surface to it, and had the
+deployer explicitly renounce its old role — verified independently via raw `cast` calls (not
+just the SDK's own report): `owner()` on both contracts is the Safe, `hasRole(DEFAULT_ADMIN_ROLE,
+deployer)` is `false` on both `AccessControl` contracts. No single key can administer Float
+anymore. Full details in `docs/security-review.md` and `docs/runbook.md` §1.
