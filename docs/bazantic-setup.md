@@ -1,5 +1,34 @@
 # Registering the Float gateway on Bazantic
 
+## Status: registered and live
+
+| | |
+|---|---|
+| Bazantic listing | **Float Sweep-Decision Gateway** |
+| Public gateway URL | `https://4t6zxrx7r5czjbddgaiqvxigym.bazgateway.com` |
+| MCP endpoint | `https://4t6zxrx7r5czjbddgaiqvxigym.bazgateway.com/mcp` |
+| Upstream (this session) | the `cloudflared` tunnel below — ephemeral, swap for a real deployment |
+| Auth | No auth (Bazantic → upstream) |
+| Pricing | `checkSweep` (`POST /v1/check`) $0.01/call · `getPolicy` (`GET /v1/policy/:ensName`) free |
+
+Verified directly against the live MCP endpoint: `initialize` responds with
+`serverInfo.name: "Float Sweep-Decision Gateway"`, and `tools/list` correctly
+exposes three tools — `checkSweep`, `getPolicy`, and an auto-generated `info`
+— with our exact `openapi.ts` descriptions and schemas carried through.
+
+Add it to an MCP client:
+```sh
+claude mcp add --transport http float-sweep-decision-gateway \
+  https://4t6zxrx7r5czjbddgaiqvxigym.bazgateway.com/mcp
+```
+
+**Remaining, optional:** publish to the Bazantic Marketplace (currently
+unpublished — only callable by this account until then), claim a custom
+handle, and author the Recipe (`02 Recipes` in the dashboard) chaining ENS
+resolve → `checkSweep` → the permissioned swap — see `docs/recipe.bazantic.json`
+for the reference shape.
+
+
 Researched Bazantic's actual registration flow (`bazantic.com/docs/deploy-a-gateway`,
 `/docs/cli`, `/docs/gateway-manifest`) and built what it needs. Two things
 were missing from `apps/gateway` before this: a public URL (it only ever ran

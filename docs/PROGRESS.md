@@ -183,3 +183,18 @@ end to end against the real HTTP API — a business created via real SIWE + `POS
 was auto-provisioned within seconds and then had a session key granted and persisted, matching
 the same code path a live wallet extension would drive. Fixed a real Turbopack/bundling bug this
 surfaced along the way (`@float/wallet`'s root barrel pulled `node:fs` into the client bundle).
+
+## ✅ Bazantic gateway — registered and live
+
+Added `GET /openapi.json` to `apps/gateway` (`src/openapi.ts`) and exposed the running gateway
+through a `cloudflared` tunnel, then registered it on Bazantic (their actual "Deploy a gateway"
+flow, researched from `bazantic.com/docs`). Live at
+`https://4t6zxrx7r5czjbddgaiqvxigym.bazgateway.com`, MCP endpoint `/mcp` — verified directly:
+`tools/list` correctly exposes `checkSweep` (`POST /v1/check`, $0.01) and `getPolicy` (`GET
+/v1/policy/:ensName`, free) with our exact descriptions/schemas. `X402_MODE=permissive` since
+Bazantic fronts payment collection on its own layer. Full steps and status in
+`docs/bazantic-setup.md`. Remaining: publish to the Marketplace, author the Recipe.
+
+This closes the last item on the original plan — **all 6 phases plus hardening are done, the
+product is deployed on live Sepolia end to end, and it's now reachable by any agent through
+Bazantic.**
